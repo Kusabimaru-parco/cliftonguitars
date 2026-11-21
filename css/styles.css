@@ -100,6 +100,27 @@ body { padding-top: var(--header-h); }
 .nav { display: flex; gap: 32px; }
 .nav a { color: var(--gold); text-decoration: none; font-weight: 700; font-size: 16px; opacity: 0.8; }
 .nav a[aria-current="page"], .nav a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 7px; text-decoration-thickness: 2px; }
+.nav { align-items: center; }
+
+/* Clifton Customs: the one header link that is a button (gold gradient outline, two lines) */
+.nav a.nav-cta {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; opacity: 1;
+  padding: 7px 16px 8px; border-radius: 14px; border: 1.5px solid transparent; text-decoration: none; line-height: 1.15;
+  /* resting: dark with a soft gold outline; it lights up (below) on hover and on the builder page */
+  background: linear-gradient(#111113, #111113) padding-box, linear-gradient(120deg, rgba(255, 224, 154, 0.55), rgba(253, 184, 63, 0.45) 45%, rgba(185, 120, 26, 0.4)) border-box;
+  transition: background 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+.nav a.nav-cta b { font-size: 14px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold); }
+.nav a.nav-cta small { font-size: 11px; font-weight: 600; color: #cfc7b6; }
+/* lights up like the hero's Clifton Customs button: warm gold-tinted fill, gold border, gold text */
+.nav a.nav-cta:hover, .nav a.nav-cta:focus-visible, .nav a.nav-cta[aria-current="page"] {
+  text-decoration: none; transform: translateY(-1px);
+  background: linear-gradient(rgba(253, 184, 63, 0.12), rgba(253, 184, 63, 0.12)) padding-box, linear-gradient(#1a1610, #1a1610) padding-box,
+    linear-gradient(120deg, #ffe09a, #fdb83f 45%, #b9781a) border-box;
+  box-shadow: 0 0 22px -4px rgba(253, 184, 63, 0.45), 0 10px 30px -12px rgba(253, 184, 63, 0.6);
+}
+.nav a.nav-cta:hover b, .nav a.nav-cta:focus-visible b, .nav a.nav-cta[aria-current="page"] b { color: var(--gold); }
+.nav a.nav-cta:hover small, .nav a.nav-cta:focus-visible small, .nav a.nav-cta[aria-current="page"] small { color: #e6d7b8; }
 .header-icons { justify-self: end; display: flex; gap: 4px; }
 .header-icons button { background: none; border: 0; color: var(--gold); padding: 8px; border-radius: 10px; }
 .header-icons button:hover { background: rgba(253, 184, 63, 0.1); }
@@ -188,6 +209,14 @@ html.cart-open .cart-drawer { transform: none; visibility: visible; }
   .mobile-nav a + a { border-top: 1px solid var(--line); }
   .mobile-nav a:hover, .mobile-nav a:focus-visible { background: rgba(253, 184, 63, 0.08); color: var(--gold); }
   .mobile-nav a[aria-current="page"] { color: var(--gold); }
+  /* Clifton Customs stands out in the phone menu too */
+  .mobile-nav a.nav-cta {
+    display: flex; flex-direction: column; gap: 2px; margin: 6px 0 2px; border: 1.5px solid var(--gold) !important;
+    background: rgba(253, 184, 63, 0.1);
+  }
+  .mobile-nav a.nav-cta + a { border-top: 0; }
+  .mobile-nav a.nav-cta b { color: var(--gold); font-size: 17px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .mobile-nav a.nav-cta small { color: #cfc7b6; font-size: 12.5px; font-weight: 600; }
 }
 
 /* ---------------- buttons */
