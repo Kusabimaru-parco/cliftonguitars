@@ -200,6 +200,7 @@ html.cart-open .cart-drawer { transform: none; visibility: visible; }
 .btn-gold:hover { background: var(--gold-2); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(253, 184, 63, 0.18); }
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  background: none;   /* <button class="btn-ghost"> otherwise gets the browser's light-grey button fill */
   color: var(--text); font-weight: 700; font-size: 16px; padding: 16px 22px;
   border: 1.5px solid rgba(255, 255, 255, 0.18); border-radius: var(--radius); transition: 0.15s;
 }

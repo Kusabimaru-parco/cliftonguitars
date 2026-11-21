@@ -1,5 +1,6 @@
-// Shared page setup: loads fonts + the wordmark, swaps it into [data-wordmark] slots,
-// and renders lineup cards. Returns the processed wordmark canvas (or null).
+// Shared page setup: loads fonts + the wordmark (used for the logos on the 3D headstocks — the header
+// and footer use the ready-made assets/logo-wordmark-gold.png directly, so there is never a text
+// fallback), header, cart and lineup cards. Returns the processed wordmark canvas (or null).
 import { loadWordmark } from './logo.js';
 import { cart } from './cart.js';
 import { FINISHES } from './models.js';
