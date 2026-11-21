@@ -2,7 +2,8 @@
 // turns and finally pulls apart as the visitor scrolls through the story sections.
 import * as THREE from 'three';
 import { MODELS, FINISHES } from './models.js';
-import { createRenderer, setupStudio, makeFloor, createModel, renderThumbnails, createAtmosphere, EXPOSURE } from './stage.js';
+import { createRenderer, setupStudio, makeFloor, createModel, createAtmosphere, EXPOSURE } from './stage.js';
+import { ELECTRIC_CARD, thumbSrc } from './catalog.js';
 import { initSite, renderLineupCards } from './site.js';
 
 const stageEl = document.getElementById('heroStage');
@@ -319,6 +320,6 @@ requestAnimationFrame(frame);
 document.body.classList.add('ready');
 
 // ---------------------------------------------------------------- lineup
-const { ELECTRIC_CARD } = await import('./electric.js');
-const thumbs = await renderThumbnails([...MODELS, ELECTRIC_CARD], { wordmark });
+// lineup: pre-rendered pictures (assets/thumbs/), not live 3D renders
+const thumbs = [...MODELS, ELECTRIC_CARD].map((m) => ({ model: m, src: thumbSrc(m.id) }));
 renderLineupCards(document.getElementById('lineupGrid'), thumbs, (m) => `guitars.html?model=${m.id}`);

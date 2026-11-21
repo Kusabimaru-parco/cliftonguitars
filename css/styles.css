@@ -708,6 +708,95 @@ body.ready .hero-copy { opacity: 1; transform: none; }
 .opt-row[aria-checked="true"] { border-color: var(--gold); background: rgba(253, 184, 63, 0.08); }
 .opt-row[aria-checked="true"] b, .opt-row[aria-checked="true"] small { color: var(--gold); }
 .opt-desc { margin: 10px 2px 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+/* picture tiles (every option shows Clifton's part picture) */
+.ptiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(106px, 1fr)); gap: 8px; }
+.ptile {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; min-width: 0;
+  padding: 8px 6px 9px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg);
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.pt-img {
+  position: relative; width: 100%; aspect-ratio: 5 / 6; border-radius: 8px; margin-bottom: 4px; overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #2a2824 0, #121214 75%);
+}
+/* pinned to the frame so tall pictures (whole guitars) shrink to fit instead of being cropped */
+.pt-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 5px; transition: transform 0.25s; }
+.ptile b { font-size: 12.5px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.ptile small { font-size: 11.5px; color: var(--muted); }
+.ptile:hover { border-color: rgba(253, 184, 63, 0.45); transform: translateY(-1px); }
+.ptile:hover .pt-img img { transform: scale(1.06); }
+.ptile[aria-checked="true"] { border-color: var(--gold); background: rgba(253, 184, 63, 0.08); }
+.ptile[aria-checked="true"] b { color: var(--gold); }
+
+/* confirmation dialog (Start over) */
+.confirm {
+  width: min(400px, calc(100vw - 32px)); padding: 26px 24px 22px; border-radius: 20px;
+  background: var(--bg-2); color: var(--text); border: 1px solid var(--line);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.95);
+}
+.confirm::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(3px); }
+.confirm[open] { animation: confirmIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1); }
+@keyframes confirmIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } }
+.confirm h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; text-transform: uppercase; color: var(--gold); }
+.confirm p { margin: 0 0 20px; color: #c9c5bc; font-size: 15px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions button { flex: 1; justify-content: center; padding: 14px 12px; border-radius: 12px; font-size: 15px; cursor: pointer; }
+.confirm-actions .btn-gold { border: 0; }
+
+/* desktop hover preview: a larger picture card over the 3D stage, beside the panel */
+.part-preview {
+  position: fixed; z-index: 40; width: 270px; padding: 14px; border-radius: 18px; pointer-events: none;
+  background: rgba(14, 14, 16, 0.94); backdrop-filter: blur(14px); border: 1px solid var(--line);
+  box-shadow: 0 30px 70px -25px rgba(0, 0, 0, 0.95);
+  opacity: 0; transform: translateX(10px) scale(0.98); transition: opacity 0.16s, transform 0.2s;
+}
+.part-preview.show { opacity: 1; transform: none; }
+.pp-img { height: 280px; border-radius: 12px; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #2c2925 0, #0e0e10 75%); }
+.pp-img img { max-width: 100%; max-height: 100%; object-fit: contain; padding: 10px; }
+.pp-q { margin: 12px 0 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.pp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pp-name { font-size: 16px; font-weight: 800; }
+.pp-price { color: var(--gold); font-weight: 800; white-space: nowrap; }
+.pp-spec { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: #b9b5ac; }
+.pp-spec:empty { display: none; }
+@media (hover: none) { .part-preview { display: none; } }
+
+/* phones/tablets: step-by-step picker with the 3D guitar pinned on top */
+.step-nav[hidden] { display: none; }
+@media (max-width: 1000px) {
+  body.stepping .configurator { display: block; }
+  body.stepping .stage { position: sticky; top: var(--header-h); z-index: 6; height: 46vh; height: 46svh; min-height: 300px; border-bottom: 1px solid var(--line); }
+  body.stepping .stage .toggles, body.stepping .stage .hint { display: none; }
+  body.stepping .stage .toolbar { bottom: 10px; flex-direction: row; }
+  body.stepping .builder-panel { padding-bottom: 120px; }
+  body.stepping .builder-panel > .eyebrow, body.stepping .builder-panel > .tagline { display: none; }
+  body.stepping .builder-panel h1 { font-size: 24px; margin: 0; }
+  .builder-panel[data-step="question"] .checkout { display: none; }
+  .builder-panel[data-step="review"] #options { display: none; }
+  .checkout { display: flex; flex-direction: column; gap: 18px; }
+  .ptiles { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .step-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
+    padding: 0 12px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(12, 12, 14, 0.94); backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+  }
+  .step-progress { height: 3px; margin: 0 -12px 10px; background: rgba(255, 255, 255, 0.08); }
+  .step-progress span { display: block; height: 100%; background: var(--gold); transition: width 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .step-row { display: flex; align-items: center; gap: 10px; }
+  .step-label { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .step-label small { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .step-label b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .step-btn {
+    display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 14px; border-radius: 12px;
+    border: 1.5px solid var(--line); background: none; color: var(--text); font-weight: 700; font-size: 14px; white-space: nowrap;
+  }
+  .step-btn:disabled { opacity: 0.35; }
+  .step-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .step-next { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+  .step-btn[hidden] { visibility: hidden; display: inline-flex; }
+}
+@media (min-width: 1001px) { .checkout { display: contents; } }
 .builder-panel .specs dd small { display: block; margin-top: 2px; color: var(--muted); font-weight: 500; font-size: 12.5px; }
 .builder-panel .specs .total { border-bottom: 0; padding-top: 14px; font-size: 16px; }
 .builder-panel .specs dd.total { color: var(--gold); font-weight: 800; font-size: 19px; }
@@ -726,7 +815,8 @@ body.ready .hero-copy { opacity: 1; transform: none; }
 .builder-panel .btn-gold { width: 100%; border: 0; cursor: pointer; }
 
 /* ================================================================ SHOP (guitars.html, no ?model) */
-body.browsing #viewer, body.browsing .lineup { display: none; }
+.browsing #viewer, .browsing .lineup { display: none; }
+.browsing #shop[hidden] { display: block; }   /* shown from first paint; shop.js fills it */
 .shop[hidden] { display: none; }
 .shop { padding: 56px 40px 88px; max-width: 1240px; margin: 0 auto; }
 .shop-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px 40px; flex-wrap: wrap; margin-bottom: 26px; }

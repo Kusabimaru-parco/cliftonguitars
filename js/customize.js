@@ -7,7 +7,7 @@ import { initSite, openCart } from './site.js';
 import { cart } from './cart.js';
 import {
   DEFAULT_BUILD, normalizeBuild, activeQuestions, listOf, labelOf, choiceOf, specOf,
-  priceOf, describeBuild, buildParams, peso, buildElectric,
+  priceOf, describeBuild, buildParams, peso, buildElectric, partImage,
 } from './electric.js';
 
 const $ = (id) => document.getElementById(id);
@@ -37,7 +37,8 @@ function resize() {
   if (!w || !h || !current) return;
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
-  const topUI = 24, bottomUI = w < 720 ? 100 : 110, usable = Math.max(h - topUI - bottomUI, h * 0.5);
+  // stepping (phones/tablets): short pinned stage with only the view buttons under the guitar
+  const topUI = stepping() ? 56 : 24, bottomUI = stepping() ? 56 : 110, usable = Math.max(h - topUI - bottomUI, h * 0.5);
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   fitDist = Math.max((current.height / 2) / t * (h / usable), 0.2 / (t * camera.aspect)) * 1.06;
   offY = ((bottomUI - topUI) / 2) * ((2 * fitDist * t) / h);
@@ -80,51 +81,111 @@ function setOption(key, value) {
 }
 
 // ---------------------------------------------------------------- UI (mirrors Clifton's builder: same questions, order, prices)
-const ROW_CLASS = { swatch: 'tiles', list: 'opt-list', chips: 'chips' };
+// Every option is a picture tile (Clifton's own part pictures). Desktop: hovering a tile shows a larger
+// preview card. Phones/tablets: one question per step with Previous / Next, the 3D guitar pinned above.
+const stepQuery = matchMedia('(max-width: 1000px)');
+const stepping = () => stepQuery.matches;
+let stepKey = null;   // current step on phones: a question key or 'review'
 
 function optionButton(q, c) {
   const btn = document.createElement('button');
+  btn.className = 'ptile';
   btn.setAttribute('role', 'radio');
   btn.setAttribute('aria-checked', String(c.id === build[q.key]));
   btn.dataset.key = q.key; btn.dataset.id = c.id;
-  const price = c.price ? peso(c.price) : '';
-  if (q.kind === 'swatch') {
-    btn.className = 'tile';
-    btn.innerHTML = `<i style="background:${c.swatch}"></i><b>${c.label}</b>${price ? `<small>${price}</small>` : ''}`;
-  } else if (q.kind === 'list') {
-    btn.className = 'opt-row';
-    btn.innerHTML = `<b>${c.label}</b><small>${price || '—'}</small>`;
-  } else {
-    btn.className = 'chip';
-    btn.innerHTML = `<b>${c.label}</b><small>${c.note ?? (price || (c.id === 'none' ? 'No gigbag' : ''))}</small>`;
-  }
+  const sub = c.price ? peso(c.price) : (c.note ?? (c.id === 'none' ? 'Not included' : 'Included'));
+  btn.innerHTML = `<span class="pt-img"><img src="${partImage(q, c, build)}" alt="" loading="lazy" decoding="async" /></span><b>${c.label}</b><small>${sub}</small>`;
   btn.addEventListener('click', () => setOption(q.key, c.id));
+  btn.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && !stepping()) showPreview(btn, q, c); });
+  btn.addEventListener('pointerleave', hidePreview);
   return btn;
 }
+
+// ---- desktop hover preview: a larger picture card beside the panel, over the 3D stage
+const preview = $('partPreview');
+function showPreview(tile, q, c) {
+  preview.querySelector('img').src = partImage(q, c, build);
+  preview.querySelector('.pp-q').textContent = labelOf(q, build);
+  preview.querySelector('.pp-name').textContent = c.label;
+  preview.querySelector('.pp-price').textContent = c.price ? peso(c.price) : '';
+  const spec = specOf(q, c, build);
+  preview.querySelector('.pp-spec').innerHTML = c.facts ? spec.join('<br>') : spec.join(' · ');
+  const panel = document.querySelector('.builder-panel').getBoundingClientRect();
+  const r = tile.getBoundingClientRect(), h = preview.offsetHeight || 420;
+  preview.style.left = `${Math.max(12, panel.left - preview.offsetWidth - 18)}px`;
+  preview.style.top = `${Math.min(innerHeight - h - 12, Math.max(76, r.top + r.height / 2 - h / 2))}px`;
+  preview.classList.add('show');
+}
+function hidePreview() { preview.classList.remove('show'); }
+
+function questionBlock(q) {
+  const sel = choiceOf(q, build), label = labelOf(q, build);
+  const block = document.createElement('div');
+  block.className = 'block opt-group';
+  block.innerHTML = `<div class="block-head"><h2>${label}</h2><span>${sel.label}${sel.price ? `<em>${peso(sel.price)}</em>` : ''}</span></div>`;
+  const row = document.createElement('div');
+  row.className = 'ptiles';
+  row.setAttribute('role', 'radiogroup');
+  row.setAttribute('aria-label', label);
+  for (const c of listOf(q, build)) row.appendChild(optionButton(q, c));
+  block.appendChild(row);
+  const lines = specOf(q, sel, build);
+  if (lines.length) {
+    const p = document.createElement('p');
+    p.className = 'opt-desc';
+    p.innerHTML = sel.facts ? lines.join('<br>') : lines.join(' · ');
+    block.appendChild(p);
+  }
+  return block;
+}
+
+// ---- phones/tablets: steps = every visible question, then a review step (summary + Add to cart)
+function stepList() { return [...activeQuestions(build).map((q) => q.key), 'review']; }
+function renderSteps() {
+  const steps = stepList();
+  if (!steps.includes(stepKey)) stepKey = steps[0];
+  const i = steps.indexOf(stepKey), last = steps.length - 1;
+  const q = activeQuestions(build).find((x) => x.key === stepKey);
+  $('stepCount').textContent = `Step ${i + 1} of ${steps.length}`;
+  $('stepName').textContent = q ? labelOf(q, build) : 'Review your build';
+  $('stepBar').style.width = `${((i + 1) / steps.length) * 100}%`;
+  $('stepPrev').disabled = i === 0;
+  const next = $('stepNext');
+  next.hidden = i === last;
+  next.childNodes[0].textContent = i === last - 1 ? 'Review' : 'Next';
+  document.querySelector('.builder-panel').dataset.step = stepKey === 'review' ? 'review' : 'question';
+}
+// bring the current step to just under the pinned 3D stage
+function scrollToStep() {
+  const stageBottom = document.querySelector('.stage').getBoundingClientRect().bottom;
+  const target = document.querySelector('.builder-panel').getBoundingClientRect().top + scrollY - stageBottom;
+  scrollTo({ top: Math.max(0, target), behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+function goStep(delta) {
+  const steps = stepList();
+  stepKey = steps[Math.max(0, Math.min(steps.length - 1, steps.indexOf(stepKey) + delta))];
+  renderOptions();
+  scrollToStep();
+}
+$('stepPrev').addEventListener('click', () => goStep(-1));
+$('stepNext').addEventListener('click', () => goStep(1));
+stepQuery.addEventListener('change', () => { document.body.classList.toggle('stepping', stepping()); hidePreview(); renderOptions(); resize(); });
+document.body.classList.toggle('stepping', stepping());
 
 function renderOptions(focusKey, focusId) {
   const host = $('options');
   host.innerHTML = '';
-  for (const q of activeQuestions(build)) {
-    const sel = choiceOf(q, build), label = labelOf(q, build);
-    const block = document.createElement('div');
-    block.className = 'block opt-group';
-    block.innerHTML = `<div class="block-head"><h2>${label}</h2><span>${sel.label}${sel.price ? `<em>${peso(sel.price)}</em>` : ''}</span></div>`;
-    const row = document.createElement('div');
-    row.className = ROW_CLASS[q.kind];
-    row.setAttribute('role', 'radiogroup');
-    row.setAttribute('aria-label', label);
-    for (const c of listOf(q, build)) row.appendChild(optionButton(q, c));
-    block.appendChild(row);
-    const lines = specOf(q, sel, build);
-    if (lines.length) {
-      const p = document.createElement('p');
-      p.className = 'opt-desc';
-      p.innerHTML = sel.facts ? lines.join('<br>') : lines.join(' · ');
-      block.appendChild(p);
-    }
-    host.appendChild(block);
+  hidePreview();
+  $('stepNav').hidden = !stepping();
+  if (stepping()) {
+    renderSteps();
+    const q = activeQuestions(build).find((x) => x.key === stepKey);
+    if (q) host.appendChild(questionBlock(q));
+    if (focusKey) host.querySelector(`[data-key="${focusKey}"][data-id="${focusId}"]`)?.focus({ preventScroll: true });
+    return;
   }
+  delete document.querySelector('.builder-panel').dataset.step;
+  for (const q of activeQuestions(build)) host.appendChild(questionBlock(q));
   // keep keyboard focus on the option that was just picked (the list re-renders)
   if (focusKey) host.querySelector(`[data-key="${focusKey}"][data-id="${focusId}"]`)?.focus({ preventScroll: true });
 }
@@ -187,10 +248,24 @@ $('addToCart').addEventListener('click', () => {
   setTimeout(openCart, reduceMotion ? 0 : 350);
 });
 $('copyLink').addEventListener('click', async () => toast((await copy(buildUrl())) ? 'Link copied — it opens this exact build' : buildUrl()));
-$('resetBuild').addEventListener('click', () => {
+// Start over: ask first (it wipes every choice), then reset and go back to the first step
+const resetDialog = $('resetDialog');
+$('resetBuild').addEventListener('click', () => resetDialog.showModal());
+$('resetCancel').addEventListener('click', () => resetDialog.close());
+resetDialog.addEventListener('click', (e) => { if (e.target === resetDialog) resetDialog.close(); });   // tap outside
+$('resetConfirm').addEventListener('click', () => {
+  resetDialog.close();
   build = normalizeBuild(DEFAULT_BUILD);
+  stepKey = null;   // phones: back to step 1 (Body Type)
   renderAll();
-  swapFx = { s: performance.now(), dur: 900, swapped: false, turn: true, r0: pivot.rotation.y };
+  if (stepping()) scrollToStep(); else scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  // camera back to the front view too
+  setAutoRotate(false); pivot.rotation.y = 0;
+  document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('active', b.dataset.view === 'front'));
+  flyTo(VIEWS.front());
+  if (!reduceMotion) swapFx = { s: performance.now(), dur: 900, swapped: false, turn: true, r0: pivot.rotation.y };
+  else makeGuitar();
+  toast('Started over');
 });
 
 // ---------------------------------------------------------------- camera views

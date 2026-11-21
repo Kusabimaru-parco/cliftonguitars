@@ -4,10 +4,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MODELS, FINISHES, HOTSPOTS } from './models.js';
 import {
-  createRenderer, setupStudio, makeFloor, createModel, disposeGroup, renderThumbnails, createAtmosphere, EXPOSURE,
+  createRenderer, setupStudio, makeFloor, createModel, disposeGroup, createAtmosphere, EXPOSURE,
 } from './stage.js';
 import { initSite, renderLineupCards, openCart } from './site.js';
 import { cart } from './cart.js';
+import { ELECTRIC_CARD, thumbSrc } from './catalog.js';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('canvasWrap');
@@ -794,82 +795,19 @@ function frame(now) {
   updateLeader();
 }
 
-// ================================================================ SHOP (guitars.html with no ?model)
-// A searchable list of every guitar. Picking one opens its 3D view (guitars.html?model=…), where the
-// version is chosen and it goes in the cart. The custom electric card leads to Clifton Customs.
-async function startShop() {
-  document.body.classList.add('browsing');
-  $('shop').hidden = false;
-  const { ELECTRIC_CARD } = await import('./electric.js');
-  const entries = [
-    ...MODELS.map((m) => ({
-      model: m, href: `guitars.html?model=${m.id}`, type: m.kind ?? 'acoustic', cta: 'View in 3D',
-      price: m.variants?.length ? `From ${peso(Math.min(...m.variants.map((v) => v.price)))}` : '',
-      text: [m.name, m.series, m.kind, m.tagline, ...Object.values(m.specs ?? {}).flat(2), ...(m.variants ?? []).map((v) => `${v.label} ${v.note}`)].join(' '),
-    })),
-    {
-      model: ELECTRIC_CARD, href: ELECTRIC_CARD.href, type: 'electric', cta: 'Build yours', price: 'Built to order',
-      text: `${ELECTRIC_CARD.name} ${ELECTRIC_CARD.series} ${ELECTRIC_CARD.tagline} electric telecaster tele stratocaster strat custom clifton customs humbucker single coil`,
-    },
-  ];
-  const grid = $('shopGrid');
-  grid.innerHTML = entries.map((e, i) => `
-    <a class="shop-card" href="${e.href}" data-i="${i}">
-      <div class="shop-img"><span class="shop-ph"></span></div>
-      <div class="shop-body">
-        <p class="eyebrow">${e.model.series} · ${e.type === 'electric' ? 'Electric' : 'Acoustic'}</p>
-        <h2>${e.model.name}</h2>
-        <p>${e.model.tagline}</p>
-        <div class="shop-foot"><span class="shop-price">${e.price}</span><span class="shop-cta">${e.cta}<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span></div>
-      </div>
-    </a>`).join('');
-
-  let filter = 'all';
-  const input = $('shopQuery');
-  const apply = () => {
-    const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
-    let shown = 0;
-    entries.forEach((e, i) => {
-      const hay = e.text.toLowerCase();
-      const ok = (filter === 'all' || e.type === filter) && words.every((w) => hay.includes(w));
-      grid.querySelector(`[data-i="${i}"]`).hidden = !ok;
-      shown += ok;
-    });
-    $('shopCount').textContent = `${shown} guitar${shown === 1 ? '' : 's'}`;
-    $('shopEmpty').hidden = shown > 0;
-  };
-  input.addEventListener('input', apply);
-  $('shopSearch').addEventListener('submit', (e) => { e.preventDefault(); apply(); input.blur(); });
-  $('shopClear').addEventListener('click', () => { input.value = ''; filter = 'all'; setFilter(); apply(); input.focus(); });
-  const setFilter = () => $('shopFilters').querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.filter === filter)));
-  $('shopFilters').addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    filter = b.dataset.filter; setFilter(); apply();
-  });
-  input.value = new URLSearchParams(location.search).get('q') ?? '';
-  apply();
-  if (location.hash === '#search') input.focus();
-
-  // product pictures: rendered once, then dropped into the cards
-  const thumbs = await renderThumbnails(entries.map((e) => e.model), { wordmark });
-  thumbs.forEach(({ src }, i) => {
-    grid.querySelector(`[data-i="${i}"] .shop-img`).innerHTML = `<img src="${src}" alt="${entries[i].model.alt ?? entries[i].model.name}" />`;
-  });
-}
-
-// ================================================================ START
-wordmark = await initSite();
+// ================================================================ START (3D view: guitars.html?model=…)
+// The guitar list itself is js/shop.js (no three.js); js/guitars.js picks which one to load.
 const requested = MODELS.find((m) => m.id === new URLSearchParams(location.search).get('model'));
-if (!requested) await startShop();
+if (!requested) location.replace('guitars.html');   // unknown guitar → back to the list
 else {
+wordmark = await initSite();
 await loadModel(requested);
 requestAnimationFrame(frame);
 
+// lineup under the viewer: pre-rendered pictures, not live 3D renders
 const lineupGrid = $('lineupGrid');
 if (lineupGrid) {
-  const { ELECTRIC_CARD } = await import('./electric.js');
-  const thumbs = await renderThumbnails([...MODELS, ELECTRIC_CARD], { wordmark });
-  renderLineupCards(lineupGrid, thumbs, () => (m) => {
+  renderLineupCards(lineupGrid, [...MODELS, ELECTRIC_CARD].map((m) => ({ model: m, src: thumbSrc(m.id) })), () => (m) => {
     stage.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
     switchTo(m);
   });

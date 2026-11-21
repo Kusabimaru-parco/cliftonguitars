@@ -29,6 +29,9 @@
     to <code>models/</code> as a binary glTF (.glb): metres, Y up, standing on the ground at the origin. Run it with
     <code>node server.js</code> (the save step needs that local server).</p>
   <button id="run">Export all</button>
+  <button id="thumbs">Render list pictures</button>
+  <p style="margin-top:14px">"Render list pictures" saves a picture of every guitar to <code>assets/thumbs/</code>. The guitar
+    list, home lineup and 3D page lineup show these files, so they load without the 3D engine. Re-run it after changing a model.</p>
   <table>
     <thead><tr><th>File</th><th>Size</th><th>Triangles</th><th>Materials</th><th>Status</th></tr></thead>
     <tbody id="rows"></tbody>
@@ -38,9 +41,9 @@
     import * as THREE from 'three';
     import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
     import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-    import { createModel } from '../js/stage.js';
+    import { createModel, renderThumbnails } from '../js/stage.js';
     import { MODELS } from '../js/models.js';
-    import { DEFAULT_BUILD } from '../js/electric.js';
+    import { DEFAULT_BUILD, ELECTRIC_CARD } from '../js/catalog.js';
     import { loadWordmark } from '../js/logo.js';
 
     // A Series (procedural, from js/guitar.js) + Clifton Customs showcase builds (from js/electric.js)
@@ -101,6 +104,23 @@
     const rows = document.getElementById('rows');
     const btn = document.getElementById('run');
     window.__export = { done: false, results: [] };
+
+    // list pictures: the same three-quarter shot the site used to render on every visit, saved once as WebP
+    document.getElementById('thumbs').addEventListener('click', async (e) => {
+      e.target.disabled = true; rows.innerHTML = ''; window.__thumbs = { done: false, results: [] };
+      const wordmark = await loadWordmark();
+      const shots = await renderThumbnails([...MODELS, ELECTRIC_CARD], { wordmark, width: 600, height: 750 });
+      for (const { model, src } of shots) {
+        const tr = document.createElement('tr'); rows.appendChild(tr);
+        const bm = await createImageBitmap(await (await fetch(src)).blob());
+        const c = new OffscreenCanvas(bm.width, bm.height); c.getContext('2d').drawImage(bm, 0, 0);
+        const blob = await c.convertToBlob({ type: 'image/webp', quality: 0.88 });
+        const res = await fetch(`/__save-thumb?name=${model.id}.webp`, { method: 'POST', body: blob });
+        tr.innerHTML = `<td>assets/thumbs/${model.id}.webp</td><td>${kb(blob.size)}</td><td></td><td></td><td class="${res.ok ? 'ok' : 'err'}">${res.ok ? 'saved' : 'failed'}</td>`;
+        window.__thumbs.results.push({ id: model.id, bytes: blob.size, ok: res.ok });
+      }
+      window.__thumbs.done = true; e.target.disabled = false;
+    });
 
     btn.addEventListener('click', async () => {
       btn.disabled = true; rows.innerHTML = ''; window.__export = { done: false, results: [] };

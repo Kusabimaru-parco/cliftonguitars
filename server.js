@@ -14,31 +14,40 @@ const types = {
   '.glb': 'model/gltf-binary',
   '.gltf': 'model/gltf+json',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.hdr': 'application/octet-stream',
 };
 
-// Dev-only: tools/export-models.html POSTs each exported guitar here and it is written to models/.
-// Accepts only plain "name.glb" file names (no paths), up to 80 MB.
+// Dev-only save endpoints (local server only):
+//  /__save-model?name=x.glb  → models/x.glb        (tools/export-models.html)
+//  /__save-part?name=x.webp  → assets/parts/x.webp (part pictures for Clifton Customs)
+// Accept only plain file names (no paths), up to 80 MB.
+const SAVE_TARGETS = {
+  '/__save-model': { dir: 'models', re: /^[a-z0-9-]+\.glb$/ },
+  '/__save-part': { dir: path.join('assets', 'parts'), re: /^[a-z0-9-]+\.webp$/ },
+  '/__save-thumb': { dir: path.join('assets', 'thumbs'), re: /^[a-z0-9-]+\.webp$/ },   // list/lineup pictures
+};
 function saveModel(req, res, url) {
+  const target = SAVE_TARGETS[url.pathname];
   const name = url.searchParams.get('name') || '';
-  if (!/^[a-z0-9-]+\.glb$/.test(name)) { res.writeHead(400); return res.end('bad name'); }
+  if (!target.re.test(name)) { res.writeHead(400); return res.end('bad name'); }
   const chunks = []; let size = 0;
   req.on('data', (c) => { size += c.length; if (size > 80e6) { res.writeHead(413); res.end(); req.destroy(); } else chunks.push(c); });
   req.on('end', () => {
     if (res.writableEnded) return;
-    fs.mkdirSync(path.join(root, 'models'), { recursive: true });
-    fs.writeFile(path.join(root, 'models', name), Buffer.concat(chunks), (err) => {
+    fs.mkdirSync(path.join(root, target.dir), { recursive: true });
+    fs.writeFile(path.join(root, target.dir, name), Buffer.concat(chunks), (err) => {
       res.writeHead(err ? 500 : 200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(err ? { error: String(err) } : { saved: `models/${name}`, bytes: size }));
+      res.end(JSON.stringify(err ? { error: String(err) } : { saved: `${target.dir}/${name}`, bytes: size }));
     });
   });
 }
 
 http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
-  if (req.method === 'POST' && url.pathname === '/__save-model') return saveModel(req, res, url);
+  if (req.method === 'POST' && SAVE_TARGETS[url.pathname]) return saveModel(req, res, url);
   let p = decodeURIComponent(url.pathname);
   if (p.endsWith('/')) p += 'index.html';
   const file = path.normalize(path.join(root, p));

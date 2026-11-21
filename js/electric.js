@@ -7,6 +7,7 @@
 // (nut-to-saddle 648 mm), so the 3D guitar has the same shapes customers already see there.
 import * as THREE from 'three';
 import { drawFitted } from './logo.js';
+import { DEFAULT_BUILD, ELECTRIC_CARD } from './catalog.js';
 
 // ================================================================ catalogue
 const NONE_NOTE = 'Our wiring comes with bullet connectors. To fit your own pickups, remove the pre-installed connectors or add bullet connectors to yours.';
@@ -120,13 +121,9 @@ export const QUESTIONS = [
 ];
 const Q = Object.fromEntries(QUESTIONS.map((q) => [q.key, q]));
 
-// Clifton's starting point: a butterscotch Telecaster
-export const DEFAULT_BUILD = {
-  body: 'tele', tfin: 'butterscotch', sfin: 'khaki', neck: 'rw-std-9',
-  tpg: 'sc', tpgc: 'vw', tn: 'classic', thn: 'vc', tb: 'classic',
-  spg: 'sss', spgc: 'vw', sn: 'lowgauss', sm: 'lowgauss', sb: 'lowgauss', shn: 'vc', shb: 'vc',
-  bag: 'none',
-};
+// Clifton's starting point (a butterscotch Telecaster) and the lineup card live in catalog.js,
+// which has no three.js, so the guitar list can use them without loading the 3D engine.
+export { DEFAULT_BUILD, ELECTRIC_CARD };
 
 export const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const listOf = (q, b) => (typeof q.choices === 'function' ? q.choices(b) : q.choices);
@@ -152,6 +149,13 @@ export function specOf(q, c, b) {
   return c.spec ?? q.spec?.(b) ?? [];
 }
 
+// picture of an option (Clifton's own part thumbnails, saved in assets/parts/); pickguard colours
+// have a picture per pickguard type, e.g. assets/parts/spgc-hss-tort.webp
+export function partImage(q, c, b) {
+  const key = q.key === 'tpgc' ? `tpgc-${b.tpg}` : q.key === 'spgc' ? `spgc-${b.spg}` : q.key;
+  return `assets/parts/${key}-${c.id}.webp`;
+}
+
 export const priceOf = (b) => activeQuestions(b).reduce((sum, q) => sum + (choiceOf(q, b).price ?? 0), 0);
 
 // rows for the build summary: { label, value, price }
@@ -160,13 +164,6 @@ export const describeBuild = (b) => activeQuestions(b).map((q) => {
   return { key: q.key, label: labelOf(q, b), value: c.label, price: c.price ?? 0 };
 });
 
-// lineup card entry (home + guitars pages): rendered with the default build, links to the customizer
-export const ELECTRIC_CARD = {
-  id: 'custom-electric', kind: 'electric', build: DEFAULT_BUILD, href: 'customize.html',
-  name: 'Custom Electric', series: 'Custom Shop',
-  tagline: 'Telecaster or Stratocaster. Choose the body, neck, pickguard and pickups.',
-  alt: 'Custom Telecaster in butterscotch with a vintage white pickguard', cta: 'Build yours',
-};
 
 // ================================================================ helpers
 const mm = (v) => v / 1000;

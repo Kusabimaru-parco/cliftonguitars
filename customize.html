@@ -71,20 +71,51 @@
 
       <div id="options"></div>
 
-      <div class="block">
-        <div class="block-head"><h2>Your build</h2></div>
-        <dl class="specs" id="summary"></dl>
+      <!-- summary + checkout: always shown on desktop; the last "Review" step on phones -->
+      <div class="checkout" id="checkout">
+        <div class="block">
+          <div class="block-head"><h2>Your build</h2></div>
+          <dl class="specs" id="summary"></dl>
+        </div>
+
+        <button class="btn-gold" id="addToCart">Add to cart</button>
+        <div class="builder-actions">
+          <button class="btn-ghost btn-sm" id="copyLink">
+            <svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>
+            Copy build link</button>
+          <button class="btn-ghost btn-sm" id="resetBuild">Start over</button>
+        </div>
+        <p class="note">Pre-orders now available. 15% off listed price.</p>
       </div>
 
-      <button class="btn-gold" id="addToCart">Add to cart</button>
-      <div class="builder-actions">
-        <button class="btn-ghost btn-sm" id="copyLink">
-          <svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>
-          Copy build link</button>
-        <button class="btn-ghost btn-sm" id="resetBuild">Start over</button>
-      </div>
-      <p class="note">Pre-orders now available. 15% off listed price.</p>
+      <!-- phones/tablets: one part group at a time -->
+      <nav class="step-nav" id="stepNav" aria-label="Build steps" hidden>
+        <div class="step-progress"><span id="stepBar"></span></div>
+        <div class="step-row">
+          <button class="step-btn" id="stepPrev"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>Previous</button>
+          <p class="step-label"><small id="stepCount"></small><b id="stepName"></b></p>
+          <button class="step-btn step-next" id="stepNext">Next<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </nav>
     </aside>
+
+    <!-- Start over confirmation -->
+    <dialog class="confirm" id="resetDialog" aria-labelledby="resetTitle">
+      <h2 id="resetTitle">Start over?</h2>
+      <p>This clears every choice in your build and takes you back to the first step. Builds already in your cart stay there.</p>
+      <div class="confirm-actions">
+        <button class="btn-ghost" id="resetCancel" autofocus>Keep my build</button>
+        <button class="btn-gold" id="resetConfirm">Start over</button>
+      </div>
+    </dialog>
+
+    <!-- desktop: larger picture of the option under the mouse -->
+    <div class="part-preview" id="partPreview" aria-hidden="true">
+      <div class="pp-img"><img alt="" /></div>
+      <p class="pp-q"></p>
+      <div class="pp-head"><b class="pp-name"></b><span class="pp-price"></span></div>
+      <p class="pp-spec"></p>
+    </div>
   </main>
 
   <section class="email-band">

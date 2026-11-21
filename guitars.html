@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Pinyon+Script&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- no ?model → the light guitar list; set before first paint so the 3D view never flashes -->
+  <script>if (!new URLSearchParams(location.search).has('model')) document.documentElement.classList.add('browsing');</script>
+  <link rel="preload" as="image" href="assets/thumbs/a1-grand-orchestra.webp" fetchpriority="high" />
   <script type="importmap">
     {
       "imports": {
@@ -211,6 +214,6 @@
     <p class="footer-base">© 2026 Clifton Guitars · 3D previews are illustrations</p>
   </footer>
 
-  <script type="module" src="js/viewer.js"></script>
+  <script type="module" src="js/guitars.js"></script>
 </body>
 </html>

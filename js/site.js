@@ -181,9 +181,10 @@ function initCart(header) {
   renderCart();
 }
 
-export async function initSite() {
+export async function initSite({ wordmark: wantWordmark = true } = {}) {
   initHeader();
   initCart(document.getElementById('siteHeader'));
+  if (!wantWordmark) return null;   // pages without 3D (the guitar list) skip the logo processing
   const [wordmark] = await Promise.all([
     loadWordmark(),
     Promise.race([
