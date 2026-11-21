@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clifton Customs — Clifton Guitars</title>
+  <meta name="description" content="Build a custom Clifton Telecaster or Stratocaster in 3D: body, neck, pickguard, pickups and gigbag, with the price as you go." />
+  <link rel="icon" type="image/png" href="assets/logo-badge.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="custom">
+  <header class="site-header" id="siteHeader">
+    <div class="header-bar">
+    <a class="logo" href="index.html" aria-label="Clifton Guitars home" data-wordmark>Clifton Guitars</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="guitars.html">Guitars</a>
+      <a href="customize.html" aria-current="page">Customize</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="header-icons">
+      <button aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+      <button aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></button>
+      <button aria-label="Cart"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></button>
+    </div>
+    </div>
+  </header>
+
+  <main id="builder" class="configurator">
+    <section class="stage" aria-label="3D preview of your guitar">
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="loader" id="loader"><span></span>Building your guitar…</div>
+      </div>
+      <div class="toast" id="toast" role="status"></div>
+      <div class="price-badge" aria-live="polite"><span>Your build</span><b id="priceTotal"></b></div>
+      <div class="toolbar" role="toolbar" aria-label="Viewer controls">
+        <div class="views" id="views">
+          <button data-view="front" class="active">Front</button>
+          <button data-view="back">Back</button>
+          <button data-view="body">Body</button>
+          <button data-view="headstock">Headstock</button>
+        </div>
+        <div class="toggles">
+          <button id="toggleRotate" class="icon-btn active" aria-pressed="true" title="Auto-rotate">
+            <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>
+          </button>
+          <button id="snapshot" class="icon-btn" title="Save image">
+            <svg viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="hint">Drag to rotate · Scroll or pinch to zoom</p>
+    </section>
+
+    <aside class="panel builder-panel">
+      <p class="eyebrow">Telecaster · Stratocaster</p>
+      <h1>Clifton Customs</h1>
+      <p class="tagline">Built by us, designed by you.</p>
+
+      <div id="options"></div>
+
+      <div class="block">
+        <div class="block-head"><h2>Your build</h2></div>
+        <dl class="specs" id="summary"></dl>
+      </div>
+
+      <button class="btn-gold" id="requestBuild">Request this build</button>
+      <div class="builder-actions">
+        <button class="btn-ghost btn-sm" id="copyLink">
+          <svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>
+          Copy build link</button>
+        <button class="btn-ghost btn-sm" id="resetBuild">Start over</button>
+      </div>
+      <p class="note">Pre-orders now available. 15% off listed price.</p>
+    </aside>
+  </main>
+
+  <section class="email-band">
+    <div>
+      <h2>Join our email list</h2>
+      <p>Get exclusive deals and early access to new products.</p>
+    </div>
+    <form class="email-form" onsubmit="event.preventDefault()">
+      <input type="email" placeholder="Email address" aria-label="Email address" />
+      <button aria-label="Subscribe"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+    </form>
+  </section>
+
+  <footer class="site-footer" id="contact">
+    <div class="footer-brand">
+      <a class="logo" href="index.html" data-wordmark>Clifton Guitars</a>
+      <p>No Frills, Just Tone.</p>
+    </div>
+    <nav class="footer-links" aria-label="Explore">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="guitars.html">Guitars in 3D</a>
+      <a href="customize.html">Customize</a>
+    </nav>
+    <nav class="footer-links" aria-label="Contact">
+      <h4>Contact</h4>
+      <a href="#">Message us</a>
+      <a href="#">Facebook</a>
+      <a href="#">Instagram</a>
+    </nav>
+    <p class="footer-base">© 2026 Clifton Guitars · 3D previews are illustrations of your build</p>
+  </footer>
+
+  <script type="module" src="js/customize.js"></script>
+</body>
+</html>

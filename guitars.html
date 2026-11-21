@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guitars in 3D — Clifton Guitars</title>
+  <meta name="description" content="Explore Clifton guitars in 3D: rotate, zoom, pick a finish and see every spec." />
+  <link rel="icon" type="image/png" href="assets/logo-badge.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="header-bar">
+    <a class="logo" href="index.html" aria-label="Clifton Guitars home" data-wordmark>Clifton Guitars</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="guitars.html" aria-current="page">Guitars</a>
+      <a href="customize.html">Customize</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="header-icons">
+      <button aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+      <button aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></button>
+      <button aria-label="Cart"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></button>
+    </div>
+    </div>
+  </header>
+
+  <main id="viewer" class="configurator">
+    <section class="stage" aria-label="3D guitar viewer" data-mode="intro">
+      <div class="model-tabs" id="modelTabs" role="tablist" aria-label="Choose a model"></div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="hotspots" id="hotspots"></div>
+        <div class="part-labels" id="partLabels" aria-hidden="true"></div>
+        <div class="loader" id="loader"><span></span>Loading model…</div>
+      </div>
+
+      <!-- cinematic intro overlays -->
+      <svg class="leader" aria-hidden="true"><path id="leaderPath" pathLength="1" /><circle id="leaderDot" r="4" /></svg>
+      <div class="callout" id="callout" hidden aria-live="polite">
+        <p class="callout-eyebrow" id="calloutEyebrow"></p>
+        <dl id="calloutList"></dl>
+      </div>
+      <div class="title-card" id="titleCard" aria-live="polite">
+        <p class="eyebrow" id="tcSeries"></p>
+        <h2 id="tcName"></h2>
+        <p class="tc-tagline" id="tcTagline"></p>
+      </div>
+      <div class="intro-ui" id="introUi">
+        <button class="icon-btn" id="introPlay" aria-label="Pause intro"></button>
+        <div class="segments" id="segments"></div>
+        <button class="btn-gold btn-sm" id="introSkip">Explore<span class="xl">&nbsp;it yourself</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="info-card" id="infoCard" hidden aria-live="polite">
+        <button class="info-close" id="infoClose" aria-label="Close">×</button>
+        <span class="info-step" id="infoStep"></span>
+        <h3 id="infoTitle"></h3>
+        <p id="infoText"></p>
+        <div class="info-nav">
+          <button id="infoPrev" aria-label="Previous feature"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button id="infoNext" aria-label="Next feature">Next <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status"></div>
+      <div class="toolbar" role="toolbar" aria-label="Viewer controls">
+        <div class="views" id="views">
+          <button data-view="front" class="active">Front</button>
+          <button data-view="back">Back</button>
+          <button data-view="side">Side</button>
+          <button data-view="headstock">Headstock</button>
+        </div>
+        <div class="toggles">
+          <button id="toggleRotate" class="icon-btn active" aria-pressed="true" title="Auto-rotate">
+            <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>
+          </button>
+          <button id="toggleHotspots" class="icon-btn active" aria-pressed="true" title="Show details">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8.5"/></svg>
+          </button>
+          <button id="toggleExplode" class="icon-btn" aria-pressed="false" title="Exploded view">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M4 4l3 3M20 4l-3 3M4 20l3-3M20 20l-3-3"/></svg>
+          </button>
+          <button id="replayIntro" class="icon-btn" title="Replay intro">
+            <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v5h5"/><path d="M10.5 9.5v5l4-2.5z" fill="currentColor"/></svg>
+          </button>
+          <button id="snapshot" class="icon-btn" title="Save image">
+            <svg viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          </button>
+          <button id="fullscreen" class="icon-btn hide-mobile" title="Fullscreen">
+            <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="hint" id="hint">Drag the guitar any time to take over</p>
+    </section>
+
+    <aside class="panel">
+      <p class="eyebrow" id="modelSeries"></p>
+      <h1 id="modelName"></h1>
+      <p class="tagline" id="modelTagline"></p>
+      <button class="tour-btn" id="panelReplay">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg>
+        Replay the intro
+      </button>
+
+      <div class="block">
+        <div class="block-head"><h2>Finish</h2><span id="finishLabel"></span></div>
+        <div class="swatches" id="swatches" role="radiogroup" aria-label="Finish"></div>
+      </div>
+
+      <div class="block">
+        <div class="spec-tabs" id="specTabs" role="tablist" aria-label="Specifications"></div>
+        <dl class="specs" id="specs"></dl>
+      </div>
+
+      <a class="btn-gold" href="customize.html">Clifton Customs</a>
+      <p class="note">Pre-orders now available. 15% off listed price.</p>
+    </aside>
+  </main>
+
+  <section class="lineup" aria-labelledby="lineupTitle">
+    <div class="section-head">
+      <h2 id="lineupTitle">The lineup</h2>
+      <p>Every guitar, in 3D, with its full spec sheet.</p>
+    </div>
+    <div class="lineup-grid" id="lineupGrid">
+      <article class="card card-soon">
+        <div class="card-img"><span class="soon-mark">A</span></div>
+        <div class="card-body">
+          <p class="eyebrow">Coming soon</p>
+          <h3>More A Series</h3>
+          <p>The rest of the A Series, modelled from the real instruments.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="email-band">
+    <div>
+      <h2>Join our email list</h2>
+      <p>Get exclusive deals and early access to new products.</p>
+    </div>
+    <form class="email-form" onsubmit="event.preventDefault()">
+      <input type="email" placeholder="Email address" aria-label="Email address" />
+      <button aria-label="Subscribe"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+    </form>
+  </section>
+
+  <footer class="site-footer" id="contact">
+    <div class="footer-brand">
+      <a class="logo" href="index.html" data-wordmark>Clifton Guitars</a>
+      <p>No Frills, Just Tone.</p>
+    </div>
+    <nav class="footer-links" aria-label="Explore">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="guitars.html">Guitars in 3D</a>
+      <a href="customize.html">Customize</a>
+    </nav>
+    <nav class="footer-links" aria-label="Contact">
+      <h4>Contact</h4>
+      <a href="#">Message us</a>
+      <a href="#">Facebook</a>
+      <a href="#">Instagram</a>
+    </nav>
+    <p class="footer-base">© 2026 Clifton Guitars · 3D previews are illustrations</p>
+  </footer>
+
+  <script type="module" src="js/viewer.js"></script>
+</body>
+</html>

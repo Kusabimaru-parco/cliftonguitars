@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clifton Guitars — No Frills, Just Tone</title>
+  <meta name="description" content="No frills, just tone. Explore Clifton guitars in 3D, or build a custom Telecaster or Stratocaster." />
+  <link rel="icon" type="image/png" href="assets/logo-badge.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="home">
+  <header class="site-header" id="siteHeader">
+    <div class="header-bar">
+    <a class="logo" href="index.html" aria-label="Clifton Guitars home" data-wordmark>Clifton Guitars</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="guitars.html">Guitars</a>
+      <a href="customize.html">Customize</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="header-icons">
+      <button aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+      <button aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg></button>
+      <button aria-label="Cart"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></button>
+    </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="showcase" id="showcase">
+    <!-- sticky 3D stage: the guitar travels through the sections below as you scroll -->
+    <div class="showcase-stage" id="heroStage">
+      <div class="hero-finishes" id="heroFinishes" role="radiogroup" aria-label="Try a finish"></div>
+      <a class="hero-feature" id="heroFeature" href="guitars.html?model=a1-grand-orchestra">
+        <span>Featuring</span><b>Clifton A1 Grand Orchestra</b>
+      </a>
+    </div>
+    <div class="showcase-content">
+    <section class="hero" aria-label="Introduction">
+      <div class="hero-copy">
+        <p class="eyebrow">Clifton A Series</p>
+        <h1>No frills,<br />just tone</h1>
+        <p class="lead"><strong>Meet the A1 Grand Orchestra.</strong> A solid Sitka spruce top over sapele, rosewood and bone, and a cutaway for the upper frets.</p>
+        <div class="hero-ctas">
+          <div class="cta">
+            <a class="btn-gold" href="guitars.html">Browse guitars</a>
+            <small>The A Series, in 3D from every angle.</small>
+          </div>
+          <div class="cta">
+            <a class="btn-ghost" href="customize.html">Clifton Customs
+              <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></a>
+            <small>Built by us, designed by you.</small>
+          </div>
+        </div>
+      </div>
+
+      <a class="scroll-cue" href="#story-1" aria-label="Scroll down"><span></span></a>
+    </section>
+
+    <section class="story" id="story-1" data-side="right">
+      <div class="story-card">
+        <p class="eyebrow">01 — Tonewoods</p>
+        <h2>Solid Sitka spruce</h2>
+        <p>A solid Sitka spruce top over laminated sapele back and sides, in a 41-inch Grand Orchestra body.</p>
+      </div>
+    </section>
+    <section class="story" data-side="left">
+      <div class="story-card">
+        <p class="eyebrow">02 — Details</p>
+        <h2>Rosewood, bone and steel</h2>
+        <p>Rosewood fingerboard and bridge, bone nut and saddle, and 304 stainless steel frets.</p>
+      </div>
+    </section>
+    <section class="story" data-side="left">
+      <div class="story-card">
+        <p class="eyebrow">03 — Built by us</p>
+        <h2>Set up by us</h2>
+        <p>Every guitar is set up and checked in our workshop before it's yours.</p>
+        <a class="btn-gold" href="guitars.html">See it in 3D</a>
+      </div>
+    </section>
+    </div>
+    </div>
+
+    <section class="strip" aria-label="What you choose">
+      <span>Solid Sitka spruce</span><i></i>
+      <span>Sapele back &amp; sides</span><i></i>
+      <span>Bone nut &amp; saddle</span><i></i>
+      <span>Previewed in 3D</span>
+    </section>
+
+    <section class="lineup" id="lineup" aria-labelledby="lineupTitle">
+      <div class="section-head">
+        <h2 id="lineupTitle">The lineup</h2>
+        <a class="link-gold" href="guitars.html">Open the 3D viewer →</a>
+      </div>
+      <div class="lineup-grid" id="lineupGrid">
+        <article class="card card-soon">
+          <div class="card-img"><span class="soon-mark">A</span></div>
+          <div class="card-body">
+            <p class="eyebrow">Coming soon</p>
+            <h3>More A Series</h3>
+            <p>The rest of the A Series, modelled from the real instruments.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="process" aria-labelledby="processTitle">
+      <div class="section-head">
+        <h2 id="processTitle">Custom electrics</h2>
+        <a class="link-gold" href="customize.html">Build yours →</a>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="step-num">01</span>
+          <h3>Design it</h3>
+          <p>Pick a Telecaster or Stratocaster body, then the neck, pickguard and pickups. Preview it in 3D as you go.</p>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <h3>We build it</h3>
+          <p>Your guitar is built in our workshop to the exact spec you chose.</p>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <h3>Play it</h3>
+          <p>Set up, checked and delivered ready to play.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="aseries" aria-labelledby="aTitle">
+      <div class="aseries-mark" aria-hidden="true">A</div>
+      <div class="aseries-copy">
+        <p class="eyebrow">Now in 3D</p>
+        <h2 id="aTitle">The A1 Grand Orchestra</h2>
+        <p>Solid Sitka spruce top, sapele back and sides, bone nut and saddle, and no binding. No frills, just tone. Walk around it in 3D.</p>
+        <a class="btn-gold" href="guitars.html?model=a1-grand-orchestra">See the A1 in 3D</a>
+      </div>
+    </section>
+  </main>
+
+  <section class="email-band" id="email">
+    <div>
+      <h2>Join our email list</h2>
+      <p>Get exclusive deals and early access to new products.</p>
+    </div>
+    <form class="email-form" onsubmit="event.preventDefault()">
+      <input type="email" placeholder="Email address" aria-label="Email address" />
+      <button aria-label="Subscribe"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+    </form>
+  </section>
+
+  <footer class="site-footer" id="contact">
+    <div class="footer-brand">
+      <a class="logo" href="index.html" data-wordmark>Clifton Guitars</a>
+      <p>No Frills, Just Tone.</p>
+    </div>
+    <nav class="footer-links" aria-label="Explore">
+      <h4>Explore</h4>
+      <a href="index.html">Home</a>
+      <a href="guitars.html">Guitars in 3D</a>
+      <a href="customize.html">Customize</a>
+    </nav>
+    <nav class="footer-links" aria-label="Contact">
+      <h4>Contact</h4>
+      <a href="#">Message us</a>
+      <a href="#">Facebook</a>
+      <a href="#">Instagram</a>
+    </nav>
+    <p class="footer-base">© 2026 Clifton Guitars · 3D previews are illustrations</p>
+  </footer>
+
+  <script type="module" src="js/home.js"></script>
+</body>
+</html>
