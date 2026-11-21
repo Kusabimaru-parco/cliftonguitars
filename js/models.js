@@ -14,6 +14,12 @@ export const MODELS = [
     glb: null,
     defaultFinish: 'natural',
     finishes: ['natural'],
+    // what the buyer picks on the Guitars page before Add to cart (prices from Clifton, PHP)
+    variants: [
+      { id: 'acoustic', label: 'Acoustic', price: 6650, note: 'Pure acoustic, no electronics.' },
+      { id: 'pickup', label: 'With pickup', price: 7900, pickup: 'Clifton KLT18B resonance piezo pickup',
+        note: 'Clifton KLT18B resonance piezo pickup with built-in gooseneck acoustic mic.' },
+    ],
     specs: {
       Body: [
         ['Body shape', '41" Grand Orchestra, cutaway'],

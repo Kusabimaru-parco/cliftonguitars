@@ -6,7 +6,8 @@ import { MODELS, FINISHES, HOTSPOTS } from './models.js';
 import {
   createRenderer, setupStudio, makeFloor, createModel, disposeGroup, renderThumbnails, createAtmosphere, EXPOSURE,
 } from './stage.js';
-import { initSite, renderLineupCards } from './site.js';
+import { initSite, renderLineupCards, openCart } from './site.js';
+import { cart } from './cart.js';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('canvasWrap');
@@ -578,10 +579,60 @@ function renderModelTabs() {
   });
 }
 
+// ---- buying: version picker (e.g. A1 with / without pickup) + Add to cart
+const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let variantId = null;
+function renderBuy(model) {
+  const vs = model.variants ?? [];
+  $('buyBlock').hidden = $('addToCart').hidden = !vs.length;
+  if (!vs.length) return;
+  if (!vs.some((v) => v.id === variantId)) variantId = vs[0].id;
+  const sel = vs.find((v) => v.id === variantId);
+  $('variantPrice').textContent = peso(sel.price);
+  $('variantNote').textContent = sel.note;
+  const host = $('variants');
+  host.innerHTML = '';
+  for (const v of vs) {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(v.id === variantId));
+    b.innerHTML = `<b>${v.label}</b><small>${peso(v.price)}</small>`;
+    b.addEventListener('click', () => { variantId = v.id; renderBuy(model); host.querySelector('[aria-checked="true"]')?.focus(); });
+    host.appendChild(b);
+  }
+}
+// small picture for the cart, taken from the model's lineup thumbnail
+function cartPicture(model) {
+  const img = [...document.querySelectorAll('#lineupGrid .card img')].find((i) => i.alt.startsWith(model.name));
+  if (!img?.complete || !img.naturalWidth) return null;
+  const c = document.createElement('canvas'); c.width = 240; c.height = 300;
+  const g = c.getContext('2d'); g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, 240, 300); g.drawImage(img, 0, 0, 240, 300);
+  return c.toDataURL('image/jpeg', 0.82);
+}
+$('addToCart').addEventListener('click', () => {
+  const model = current?.model, v = model?.variants?.find((x) => x.id === variantId);
+  if (!v) return;
+  cart.add({
+    title: `Clifton ${model.name}`,
+    subtitle: v.pickup ? `With pickup · ${v.pickup}` : v.label,
+    image: cartPicture(model),
+    url: `guitars.html?model=${model.id}`, linkLabel: 'View in 3D',
+    lines: [
+      { label: 'Model', value: `${model.series} · ${model.name}` },
+      { label: 'Version', value: v.label, price: v.price },
+      { label: 'Pickup', value: v.pickup ? 'KLT18B piezo + gooseneck mic' : 'None' },
+    ],
+    unit: v.price,
+  });
+  const btn = document.querySelector('.cart-btn');
+  btn?.classList.remove('bump'); void btn?.offsetWidth; btn?.classList.add('bump');
+  setTimeout(openCart, 250);
+});
+
 function renderPanel(model) {
   $('modelSeries').textContent = model.series;
   $('modelName').textContent = model.name;
   $('modelTagline').textContent = model.tagline;
+  renderBuy(model);
 
   const sw = $('swatches');
   sw.innerHTML = '';

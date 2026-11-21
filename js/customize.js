@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createRenderer, setupStudio, makeFloor, createAtmosphere, EXPOSURE } from './stage.js';
-import { initSite } from './site.js';
+import { initSite, openCart } from './site.js';
+import { cart } from './cart.js';
 import {
   DEFAULT_BUILD, normalizeBuild, activeQuestions, listOf, labelOf, choiceOf, specOf,
   priceOf, describeBuild, buildParams, peso, buildElectric,
@@ -144,13 +145,22 @@ function buildUrl() {
 }
 function syncUrl() { history.replaceState(null, '', buildUrl()); }
 
-function summaryText() {
-  return [
-    'Clifton custom electric — build request',
-    ...describeBuild(build).map((r) => `${r.label}: ${r.value}${r.price ? ` (${peso(r.price)})` : ''}`),
-    `Total: ${peso(priceOf(build))}`,
-    `3D preview: ${buildUrl()}`,
-  ].join('\n');
+// small front-view picture of the current build for the cart (rendered off the live scene, then restored)
+function thumbnail() {
+  const w = 240, h = 320, prevPR = renderer.getPixelRatio();
+  const prevPos = camera.position.clone(), prevTarget = controls.target.clone(), rot = pivot.rotation.y;
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  pivot.rotation.y = 0;
+  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), c = V(0, 0, 0);
+  camera.position.copy(around(c, (current.height / 2) / t * 1.06, 0, 0)); camera.lookAt(c);
+  renderer.setClearColor('#0b0b0c', 1); renderer.toneMappingExposure = EXPOSURE;
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/jpeg', 0.82);
+  renderer.setClearColor('#000000', 0); renderer.setPixelRatio(prevPR);
+  camera.position.copy(prevPos); controls.target.copy(prevTarget); pivot.rotation.y = rot;
+  resize();
+  return url;
 }
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
@@ -160,10 +170,21 @@ function toast(text) {
   clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-$('requestBuild').addEventListener('click', async () => {
-  const ok = await copy(summaryText());
-  toast(ok ? 'Build copied — paste it in your message to us' : 'Your build is listed under “Your build”');
-  setTimeout(() => $('contact').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }), 600);
+$('addToCart').addEventListener('click', () => {
+  const rows = describeBuild(build);
+  const val = (key) => rows.find((r) => r.key === key)?.value;
+  cart.add({
+    title: `Custom ${build.body === 'tele' ? 'Telecaster' : 'Stratocaster'}`,
+    subtitle: `${val(build.body === 'tele' ? 'tfin' : 'sfin')} · ${val('neck')}`,
+    image: thumbnail(),
+    url: buildUrl(),
+    lines: rows.map(({ label, value, price }) => ({ label, value, price })),
+    unit: priceOf(build),
+  });
+  const btn = document.querySelector('.cart-btn');
+  btn?.classList.remove('bump'); void btn?.offsetWidth; btn?.classList.add('bump');
+  toast('Added to cart');
+  setTimeout(openCart, reduceMotion ? 0 : 350);
 });
 $('copyLink').addEventListener('click', async () => toast((await copy(buildUrl())) ? 'Link copied — it opens this exact build' : buildUrl()));
 $('resetBuild').addEventListener('click', () => {
