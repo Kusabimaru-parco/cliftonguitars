@@ -104,6 +104,29 @@ body { padding-top: var(--header-h); }
 .header-icons button { background: none; border: 0; color: var(--gold); padding: 8px; border-radius: 10px; }
 .header-icons button:hover { background: rgba(253, 184, 63, 0.1); }
 
+/* phone menu (built by site.js from the page's .nav) */
+.menu-btn { display: none; }
+.mobile-nav { display: none; }
+@media (max-width: 720px) {
+  .menu-btn { display: inline-flex; }
+  .mobile-nav {
+    display: flex; flex-direction: column; position: absolute; top: calc(100% + 6px); left: 12px; right: 12px;
+    padding: 8px; border-radius: 18px; pointer-events: auto;
+    background: rgba(14, 14, 16, 0.96); backdrop-filter: blur(14px); border: 1px solid var(--line);
+    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+    opacity: 0; visibility: hidden; transform: translateY(-8px);
+    transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), visibility 0.2s;
+  }
+  .site-header.menu-open .mobile-nav { opacity: 1; visibility: visible; transform: none; }
+  .mobile-nav a {
+    padding: 15px 16px; border-radius: 12px; text-decoration: none;
+    color: var(--text); font-weight: 700; font-size: 17px;
+  }
+  .mobile-nav a + a { border-top: 1px solid var(--line); }
+  .mobile-nav a:hover, .mobile-nav a:focus-visible { background: rgba(253, 184, 63, 0.08); color: var(--gold); }
+  .mobile-nav a[aria-current="page"] { color: var(--gold); }
+}
+
 /* ---------------- buttons */
 .btn-gold {
   display: inline-block; text-align: center; text-decoration: none;
@@ -678,6 +701,9 @@ body.ready .hero-copy { opacity: 1; transform: none; }
   .hero-ctas { justify-content: center; }
   .hero-ctas .cta { align-items: center; }
   .hero-ctas .cta small { padding-left: 0; }
+  .hero { align-items: end; }                 /* guitar sits up top here (home.js mobile pose) */
+  .hero-copy { padding-bottom: 32px; }
+  .hero-feature { bottom: auto; top: calc(var(--floor-y, 60%) + 10px); }
   .story { align-items: flex-end; padding: 0 16px 28px; }
   .story[data-side] { justify-content: center; }
   .story-card { max-width: 520px; padding: 22px 22px; background: rgba(8, 8, 10, 0.72); }
@@ -703,9 +729,17 @@ body.ready .hero-copy { opacity: 1; transform: none; }
 
   .hero-copy { padding: 36px 16px 0; gap: 16px; }
   .lead { font-size: 16px; }
-  .hero-ctas { flex-direction: column; align-self: stretch; }
-  .hero-ctas .cta { align-items: stretch; }
-  .hero-ctas a { justify-content: center; }
+  /* phone hero: guitar on top (home.js pose), copy docked at the bottom, buttons side by side */
+  .hero-copy { padding: 0 16px 26px; gap: 14px; }
+  .hero h1 { font-size: 38px; }
+  .hero .lead { font-size: 14.5px; line-height: 1.5; }
+  .hero-ctas { align-self: stretch; flex-wrap: nowrap; gap: 8px; margin-top: 2px; }
+  .hero-ctas .cta { flex: 1; align-items: stretch; }
+  .hero-ctas .cta small { display: none; }
+  .hero-ctas a { justify-content: center; height: 50px; padding: 0 12px; font-size: 15px; gap: 6px; }
+  .hero-ctas .btn-ghost svg { width: 16px; height: 16px; }
+  .hero-feature { padding: 7px 14px; }
+  .hero-feature b { font-size: 13px; }
   .strip { font-size: 12px; gap: 10px 14px; }
 
   .model-tabs { top: 12px; }

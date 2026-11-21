@@ -10,8 +10,9 @@ function initHeader() {
   if (!header) return;
   const state = { scrolled: false, near: false, up: false, focus: false };
   let lastY = window.scrollY;
+  initMobileNav(header);
   const apply = () => {
-    header.classList.toggle('compact', state.scrolled && !state.near && !state.up && !state.focus);
+    header.classList.toggle('compact', state.scrolled && !state.near && !state.up && !state.focus && !header.classList.contains('menu-open'));
     header.classList.toggle('at-top', window.scrollY < 8);
   };
   window.addEventListener('scroll', () => {
@@ -33,6 +34,37 @@ function initHeader() {
   header.addEventListener('focusout', () => { state.focus = false; apply(); });
   state.scrolled = window.scrollY > 60;
   apply();
+}
+
+// Phones: the header links are hidden, so a menu button opens them as a dropdown under the header.
+// Built from the page's own .nav, so every page gets it without extra markup.
+const BURGER = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+const CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function initMobileNav(header) {
+  const nav = header.querySelector('.nav'), icons = header.querySelector('.header-icons');
+  if (!nav || !icons) return;
+  const btn = document.createElement('button');
+  btn.className = 'menu-btn';
+  btn.setAttribute('aria-label', 'Menu');
+  btn.setAttribute('aria-controls', 'mobileNav');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = BURGER;
+  icons.appendChild(btn);
+  const panel = document.createElement('nav');
+  panel.id = 'mobileNav'; panel.className = 'mobile-nav'; panel.setAttribute('aria-label', 'Main');
+  panel.innerHTML = nav.innerHTML;
+  header.appendChild(panel);
+  const set = (open) => {
+    header.classList.toggle('menu-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.innerHTML = open ? CLOSE : BURGER;
+    if (open) header.classList.remove('compact');
+  };
+  btn.addEventListener('click', () => set(!header.classList.contains('menu-open')));
+  panel.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+  // tap outside closes it (composedPath: the button's icon is swapped mid-click, so e.target may be detached)
+  document.addEventListener('click', (e) => { if (!e.composedPath().includes(header)) set(false); });
 }
 
 export async function initSite() {

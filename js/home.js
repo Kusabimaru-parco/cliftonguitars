@@ -49,6 +49,20 @@ function resize() {
   camera.position.set(0, 0.03, dist);
   camera.lookAt(0, 0, 0);
   camera.updateProjectionMatrix();
+  if (mobile) fitMobileHero(h);
+}
+
+// Phone/tablet hero: the guitar fills the space between the header and the docked copy
+// (leaving room for the "Featuring" tag under it), whatever the screen's height.
+function fitMobileHero(H) {
+  const copy = heroSection.querySelector('.hero-copy');
+  const copyTop = copy.getBoundingClientRect().top - heroSection.getBoundingClientRect().top;   // px from the stage top
+  const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 64;
+  const top = headerH + 10, bottom = copyTop - 72;                                            // 72 px: the tag + breathing room
+  if (bottom - top < 120) return;
+  const pose = POSES_MOBILE[0];
+  pose.scale = Math.min(1.1, ((bottom - top) * visH) / (H * built.height));
+  pose.y = 1 - (top + bottom) / H;                                                             // centre between top and bottom
 }
 new ResizeObserver(resize).observe(stageEl);
 
@@ -64,7 +78,7 @@ const POSES_DESKTOP = [
   { x: 0.36, y: -0.1, scale: 0.78, yaw: -0.95, pitch: 0.05, lean: -0.04, explode: 1 }, // built by us
 ];
 const POSES_MOBILE = [
-  { x: 0, y: -0.5, scale: 0.56, yaw: 0, pitch: 0, lean: -0.05, explode: 0 },
+  { x: 0, y: 0.31, scale: 0.5, yaw: 0, pitch: 0, lean: -0.05, explode: 0 },   // hero: guitar up top, copy docked below
   { x: 0, y: 0.32, scale: 1.1, yaw: -0.55, pitch: 0.14, lean: 0.3, explode: 0 },
   { x: 0, y: -0.15, scale: 1.5, yaw: 0.6, pitch: 0.06, lean: -0.25, explode: 0 },
   { x: 0, y: 0.3, scale: 0.72, yaw: -0.95, pitch: 0.05, lean: -0.04, explode: 1 },
@@ -277,6 +291,8 @@ function frame(now) {
   const st = stageEl.style;
   st.setProperty('--beam-x', `${gx}px`);
   st.setProperty('--pool-y', `${gy}px`);
+  _v.copy(floor.position).project(camera);                       // where the guitar stands (phone: "Featuring" tag sits here)
+  st.setProperty('--floor-y', `${((1 - _v.y) / 2) * H}px`);
   st.setProperty('--beam-sx', `${sx}px`);
   st.setProperty('--beam-sy', `${sy}px`);
   st.setProperty('--beam-rot', `${-Math.atan2(dx, dy)}rad`);
