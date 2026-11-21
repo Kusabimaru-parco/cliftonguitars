@@ -146,6 +146,13 @@ function initCart(header) {
     </div>`;
   document.body.append(scrim, drawer);
 
+  // header search button → the guitar list's search box (on the Guitars page, or opens it)
+  header?.querySelector('.header-icons [aria-label="Search"]')?.addEventListener('click', () => {
+    const q = document.getElementById('shopQuery');
+    if (q && q.offsetParent) { q.scrollIntoView({ block: 'center', behavior: 'smooth' }); q.focus({ preventScroll: true }); }
+    else location.href = 'guitars.html#search';
+  });
+
   // header cart button + count badge
   const btn = header?.querySelector('.header-icons [aria-label="Cart"]');
   if (btn) {

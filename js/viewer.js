@@ -68,7 +68,7 @@ function resize() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   if (current) {
-    const topUI = 70, bottomUI = w < 720 ? 100 : 110;
+    const topUI = 70, bottomUI = w <= 720 ? 140 : 110;   // phones: the toolbar is two rows
     const usable = Math.max(h - topUI - bottomUI, h * 0.5);
     const t = Math.tan(degToRad(camera.fov / 2));
     fitDist = Math.max((current.height / 2) / t * (h / usable), 0.25 / (t * camera.aspect)) * 1.08;
@@ -520,7 +520,6 @@ async function loadModel(model) {
   applyFinish(model.defaultFinish);
   $('toggleExplode').hidden = !current.setExplode;
   setExplodeTarget(0);
-  document.querySelectorAll('#modelTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === model.id)));
   const url = new URL(location.href);
   url.searchParams.set('model', model.id);
   history.replaceState(null, '', url);
@@ -546,7 +545,6 @@ async function switchTo(model) {
   intro.playing = false;
   setMode('switching');
   hideCallout(); hideTitle(); closeInfo();
-  document.querySelectorAll('#modelTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === model.id)));
   if (!reduceMotion) {
     stage.classList.remove('sweep'); void stage.offsetWidth; stage.classList.add('sweep');
     const r0 = pivot.rotation.y, y0 = pivot.position.y, f0 = fade;
@@ -565,19 +563,7 @@ async function switchTo(model) {
 }
 
 // ================================================================ PANEL
-function renderModelTabs() {
-  const el = $('modelTabs');
-  el.innerHTML = '';
-  el.hidden = MODELS.length < 2;   // only one acoustic right now: no tabs needed
-  MODELS.forEach((m) => {
-    const b = document.createElement('button');
-    b.role = 'tab';
-    b.dataset.id = m.id;
-    b.textContent = m.name;
-    b.addEventListener('click', () => switchTo(m));
-    el.appendChild(b);
-  });
-}
+// (no model tabs: other guitars are reached through the "All guitars" back button → the shop list)
 
 // ---- buying: version picker (e.g. A1 with / without pickup) + Add to cart
 const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -750,7 +736,7 @@ $('infoNext').addEventListener('click', () => stepTour(1));
 $('introSkip').addEventListener('click', () => exitIntro({ toFront: true }));
 $('introPlay').addEventListener('click', () => { intro.playing = !intro.playing; setPlayButton(); });
 document.addEventListener('keydown', (e) => {
-  if (e.target.closest('input, textarea')) return;
+  if (!current || e.target.closest('input, textarea')) return;   // no 3D view on the shop list
   if (mode === 'intro') {
     if (e.key === ' ') { e.preventDefault(); intro.playing = !intro.playing; setPlayButton(); }
     else if (e.key === 'Escape') exitIntro({ toFront: true });
@@ -808,11 +794,75 @@ function frame(now) {
   updateLeader();
 }
 
+// ================================================================ SHOP (guitars.html with no ?model)
+// A searchable list of every guitar. Picking one opens its 3D view (guitars.html?model=…), where the
+// version is chosen and it goes in the cart. The custom electric card leads to Clifton Customs.
+async function startShop() {
+  document.body.classList.add('browsing');
+  $('shop').hidden = false;
+  const { ELECTRIC_CARD } = await import('./electric.js');
+  const entries = [
+    ...MODELS.map((m) => ({
+      model: m, href: `guitars.html?model=${m.id}`, type: m.kind ?? 'acoustic', cta: 'View in 3D',
+      price: m.variants?.length ? `From ${peso(Math.min(...m.variants.map((v) => v.price)))}` : '',
+      text: [m.name, m.series, m.kind, m.tagline, ...Object.values(m.specs ?? {}).flat(2), ...(m.variants ?? []).map((v) => `${v.label} ${v.note}`)].join(' '),
+    })),
+    {
+      model: ELECTRIC_CARD, href: ELECTRIC_CARD.href, type: 'electric', cta: 'Build yours', price: 'Built to order',
+      text: `${ELECTRIC_CARD.name} ${ELECTRIC_CARD.series} ${ELECTRIC_CARD.tagline} electric telecaster tele stratocaster strat custom clifton customs humbucker single coil`,
+    },
+  ];
+  const grid = $('shopGrid');
+  grid.innerHTML = entries.map((e, i) => `
+    <a class="shop-card" href="${e.href}" data-i="${i}">
+      <div class="shop-img"><span class="shop-ph"></span></div>
+      <div class="shop-body">
+        <p class="eyebrow">${e.model.series} · ${e.type === 'electric' ? 'Electric' : 'Acoustic'}</p>
+        <h2>${e.model.name}</h2>
+        <p>${e.model.tagline}</p>
+        <div class="shop-foot"><span class="shop-price">${e.price}</span><span class="shop-cta">${e.cta}<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span></div>
+      </div>
+    </a>`).join('');
+
+  let filter = 'all';
+  const input = $('shopQuery');
+  const apply = () => {
+    const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    entries.forEach((e, i) => {
+      const hay = e.text.toLowerCase();
+      const ok = (filter === 'all' || e.type === filter) && words.every((w) => hay.includes(w));
+      grid.querySelector(`[data-i="${i}"]`).hidden = !ok;
+      shown += ok;
+    });
+    $('shopCount').textContent = `${shown} guitar${shown === 1 ? '' : 's'}`;
+    $('shopEmpty').hidden = shown > 0;
+  };
+  input.addEventListener('input', apply);
+  $('shopSearch').addEventListener('submit', (e) => { e.preventDefault(); apply(); input.blur(); });
+  $('shopClear').addEventListener('click', () => { input.value = ''; filter = 'all'; setFilter(); apply(); input.focus(); });
+  const setFilter = () => $('shopFilters').querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.filter === filter)));
+  $('shopFilters').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    filter = b.dataset.filter; setFilter(); apply();
+  });
+  input.value = new URLSearchParams(location.search).get('q') ?? '';
+  apply();
+  if (location.hash === '#search') input.focus();
+
+  // product pictures: rendered once, then dropped into the cards
+  const thumbs = await renderThumbnails(entries.map((e) => e.model), { wordmark });
+  thumbs.forEach(({ src }, i) => {
+    grid.querySelector(`[data-i="${i}"] .shop-img`).innerHTML = `<img src="${src}" alt="${entries[i].model.alt ?? entries[i].model.name}" />`;
+  });
+}
+
 // ================================================================ START
 wordmark = await initSite();
-renderModelTabs();
 const requested = MODELS.find((m) => m.id === new URLSearchParams(location.search).get('model'));
-await loadModel(requested ?? MODELS[0]);
+if (!requested) await startShop();
+else {
+await loadModel(requested);
 requestAnimationFrame(frame);
 
 const lineupGrid = $('lineupGrid');
@@ -823,4 +873,5 @@ if (lineupGrid) {
     stage.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
     switchTo(m);
   });
+}
 }

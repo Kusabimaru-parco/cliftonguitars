@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Export Models — Clifton Guitars (dev tool)</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 32px; background: #0b0b0c; color: #e9e6df; font: 15px/1.5 system-ui, sans-serif; }
+    h1 { margin: 0 0 6px; color: #fdb83f; font-size: 26px; }
+    p { margin: 0 0 18px; color: #9c988f; max-width: 60em; }
+    button { padding: 12px 20px; border: 0; border-radius: 12px; background: #fdb83f; color: #111; font-weight: 700; font-size: 15px; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    table { margin-top: 22px; border-collapse: collapse; min-width: 640px; }
+    th, td { text-align: left; padding: 9px 16px 9px 0; border-bottom: 1px solid #26252a; }
+    th { color: #9c988f; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+    td.ok { color: #8fd18f; } td.err { color: #ff8a7a; }
+  </style>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <h1>Export guitars to .glb</h1>
+  <p>Builds every A Series guitar and a few Clifton Customs showcase builds exactly as the site does, and saves each one
+    to <code>models/</code> as a binary glTF (.glb): metres, Y up, standing on the ground at the origin. Run it with
+    <code>node server.js</code> (the save step needs that local server).</p>
+  <button id="run">Export all</button>
+  <table>
+    <thead><tr><th>File</th><th>Size</th><th>Triangles</th><th>Materials</th><th>Status</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+    import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+    import { createModel } from '../js/stage.js';
+    import { MODELS } from '../js/models.js';
+    import { DEFAULT_BUILD } from '../js/electric.js';
+    import { loadWordmark } from '../js/logo.js';
+
+    // A Series (procedural, from js/guitar.js) + Clifton Customs showcase builds (from js/electric.js)
+    const JOBS = [
+      ...MODELS.map((m) => ({ file: `${m.id}.glb`, title: `Clifton ${m.name}`, model: m })),
+      ...[
+        ['custom-telecaster-butterscotch', 'Clifton Customs Telecaster, Butterscotch', DEFAULT_BUILD],
+        ['custom-telecaster-black-humbucker', 'Clifton Customs Telecaster, Black, neck humbucker', { body: 'tele', tfin: 'black', tpg: 'hb', tpgc: 'white', thn: 'inv' }],
+        ['custom-stratocaster-sunburst', 'Clifton Customs Stratocaster, Sunburst', { body: 'strat', sfin: 'sunburst' }],
+        ['custom-stratocaster-teal-hss', 'Clifton Customs Stratocaster, Metallic Teal HSS', { body: 'strat', sfin: 'teal', spg: 'hss', spgc: 'black', neck: 'mp-wiz-9' }],
+      ].map(([id, title, build]) => ({ file: `${id}.glb`, title, model: { id, kind: 'electric', build } })),
+    ];
+
+    // Instanced meshes (e.g. the A1's kerfed lining) become one plain mesh, so every glTF viewer
+    // (Shopify / model-viewer, Blender, AR Quick Look via conversion) shows them without extensions.
+    function flattenInstances(root) {
+      const swaps = [];
+      root.traverse((o) => { if (o.isInstancedMesh) swaps.push(o); });
+      for (const inst of swaps) {
+        const m4 = new THREE.Matrix4(), parts = [];
+        for (let i = 0; i < inst.count; i++) { inst.getMatrixAt(i, m4); parts.push(inst.geometry.clone().applyMatrix4(m4)); }
+        const mesh = new THREE.Mesh(mergeGeometries(parts), inst.material);
+        mesh.name = inst.name || 'instances';
+        mesh.position.copy(inst.position); mesh.quaternion.copy(inst.quaternion); mesh.scale.copy(inst.scale);
+        inst.parent.add(mesh); inst.removeFromParent();
+      }
+    }
+    // drop empty helper nodes (label anchors for the site's exploded view)
+    function pruneEmpties(root) {
+      for (;;) {   // collect first, then remove (removing while traversing skips/breaks the walk)
+        const empties = [];
+        root.traverse((o) => { if (o !== root && !o.isMesh && o.children.length === 0) empties.push(o); });
+        if (!empties.length) break;
+        empties.forEach((o) => o.removeFromParent());
+      }
+    }
+    // opaque textures (wood grain, finishes) as JPEG — far smaller than PNG; see-through ones (logos) stay PNG
+    function jpegOpaqueTextures(root) {
+      root.traverse((o) => {
+        if (!o.isMesh) return;
+        for (const m of [].concat(o.material)) {
+          if (m.transparent || m.alphaTest > 0) continue;
+          for (const key of ['map', 'roughnessMap', 'bumpMap', 'normalMap']) if (m[key]) m[key].userData.mimeType = 'image/jpeg';
+        }
+      });
+    }
+    function stats(root) {
+      let tris = 0; const mats = new Set();
+      root.traverse((o) => {
+        if (!o.isMesh) return;
+        const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+        [].concat(o.material).forEach((m) => mats.add(m));
+      });
+      return { tris: Math.round(tris), mats: mats.size };
+    }
+    const kb = (n) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`);
+
+    const rows = document.getElementById('rows');
+    const btn = document.getElementById('run');
+    window.__export = { done: false, results: [] };
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; rows.innerHTML = ''; window.__export = { done: false, results: [] };
+      const wordmark = await loadWordmark();
+      const exporter = new GLTFExporter();
+      for (const job of JOBS) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${job.file}</td><td></td><td></td><td></td><td>building…</td>`;
+        rows.appendChild(tr);
+        const [, cSize, cTris, cMats, cStatus] = tr.children;
+        try {
+          const built = await createModel(job.model, { wordmark });
+          const root = new THREE.Group();
+          root.name = job.title;
+          built.group.position.set(0, 0, 0);          // stand it on the ground: tail at the origin, Y up
+          root.add(built.group);
+          root.updateMatrixWorld(true);
+          flattenInstances(root);
+          pruneEmpties(root);
+          jpegOpaqueTextures(root);
+          const s = stats(root);
+          const glb = await exporter.parseAsync(root, { binary: true, onlyVisible: true, maxTextureSize: 2048 });
+          const res = await fetch(`/__save-model?name=${job.file}`, { method: 'POST', body: glb });
+          if (!res.ok) throw new Error(`save failed (${res.status})`);
+          cSize.textContent = kb(glb.byteLength); cTris.textContent = s.tris.toLocaleString(); cMats.textContent = s.mats;
+          cStatus.textContent = 'saved'; cStatus.className = 'ok';
+          window.__export.results.push({ file: job.file, bytes: glb.byteLength, ...s });
+        } catch (e) {
+          cStatus.textContent = String(e.message || e); cStatus.className = 'err';
+          window.__export.results.push({ file: job.file, error: String(e.message || e) });
+        }
+      }
+      window.__export.done = true;
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

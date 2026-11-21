@@ -19,8 +19,27 @@ const types = {
   '.hdr': 'application/octet-stream',
 };
 
+// Dev-only: tools/export-models.html POSTs each exported guitar here and it is written to models/.
+// Accepts only plain "name.glb" file names (no paths), up to 80 MB.
+function saveModel(req, res, url) {
+  const name = url.searchParams.get('name') || '';
+  if (!/^[a-z0-9-]+\.glb$/.test(name)) { res.writeHead(400); return res.end('bad name'); }
+  const chunks = []; let size = 0;
+  req.on('data', (c) => { size += c.length; if (size > 80e6) { res.writeHead(413); res.end(); req.destroy(); } else chunks.push(c); });
+  req.on('end', () => {
+    if (res.writableEnded) return;
+    fs.mkdirSync(path.join(root, 'models'), { recursive: true });
+    fs.writeFile(path.join(root, 'models', name), Buffer.concat(chunks), (err) => {
+      res.writeHead(err ? 500 : 200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(err ? { error: String(err) } : { saved: `models/${name}`, bytes: size }));
+    });
+  });
+}
+
 http.createServer((req, res) => {
-  let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  const url = new URL(req.url, 'http://x');
+  if (req.method === 'POST' && url.pathname === '/__save-model') return saveModel(req, res, url);
+  let p = decodeURIComponent(url.pathname);
   if (p.endsWith('/')) p += 'index.html';
   const file = path.normalize(path.join(root, p));
   if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }

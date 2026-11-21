@@ -131,6 +131,56 @@ export const PROFILES = {
       // so the heel buried in the body never pokes through it
       [0.0292, 0.484], [0.029, 0.497], [0.0278, 0.5035], [0.02, 0.5048], [0, 0.505]],
   },
+
+  // Clifton A1 Orchestra (OM) — 40" body. Same neck, bridge, headstock and hardware as the Grand
+  // Orchestra; the body is the difference. Outline traced from reference/a1-om-front.png
+  // (white-background product shot), scaled to a 490 mm OM body (≈ 393 lower / 247 waist / 297 upper).
+  // Depths are estimates for an OM (the photos don't show them); no binding, per the spec sheet.
+  orchestra: {
+    length: 0.49, depth: 0.108, depthNeck: 0.092, soundhole: { y: 0.345, r: 0.047 }, fbToSoundhole: true,
+    scale: 0.648, frets: 20, nutW: 0.043, fbW12: 0.054, dots: [3, 5, 7, 9, 12, 15, 17],
+    binding: false, pickguard: false, rosette: false, satin: true,
+    bridge: 'belly', tuners: 'black', headstock: 'a1', headFace: 'rosewoodFace', topWood: 'spruceA1',
+    pinDots: false, interior: 'a1', labelStyle: 'a1',
+    finishes: { natural: { top: 'natural', body: 'sapele', neck: 'neckA1' } },
+    pts: [[0, 0], [0.073, 0.0083], [0.1166, 0.0208], [0.1415, 0.0332], [0.1581, 0.0457], [0.1699, 0.0581], [0.1789, 0.0706],
+      [0.1851, 0.0831], [0.19, 0.0955], [0.1941, 0.108], [0.1962, 0.1266], [0.1962, 0.1453], [0.1941, 0.1703],
+      [0.1921, 0.1827], [0.1886, 0.1952], [0.1837, 0.2076], [0.1782, 0.2201], [0.172, 0.2325], [0.1644, 0.245],
+      [0.1561, 0.2575], [0.1478, 0.2699], [0.1388, 0.2824], [0.1312, 0.2948], [0.1256, 0.3073], [0.1235, 0.3197],
+      [0.1235, 0.3322], [0.1263, 0.3447], [0.1312, 0.3571], [0.1374, 0.3696], [0.1422, 0.382], [0.1464, 0.3945],
+      [0.1485, 0.4069], [0.1485, 0.4194], [0.145, 0.4319], [0.1408, 0.4443], [0.1325, 0.4568], [0.1208, 0.4692],
+      [0.1, 0.4817], [0.07, 0.4875], [0.035, 0.4895], [0, 0.49]],
+    // treble side: shallow rounded cutaway — horn tip ≈ 0.43, scooping down to 0.415 before rising to the heel
+    ptsTreble: [[0, 0], [0.0661, 0.0083], [0.1145, 0.0208], [0.1395, 0.0332], [0.1561, 0.0457], [0.1678, 0.0581],
+      [0.1768, 0.0706], [0.1844, 0.0831], [0.1886, 0.0955], [0.1921, 0.108], [0.1941, 0.1266], [0.1941, 0.1453],
+      [0.1934, 0.1703], [0.19, 0.1827], [0.1872, 0.1952], [0.1831, 0.2076], [0.1768, 0.2201], [0.1706, 0.2325],
+      [0.163, 0.245], [0.154, 0.2575], [0.1443, 0.2699], [0.1339, 0.2824], [0.1256, 0.2948], [0.1201, 0.3073],
+      [0.1187, 0.3197], [0.1194, 0.3322], [0.1222, 0.3447], [0.1277, 0.3571], [0.1332, 0.3696], [0.1381, 0.382],
+      [0.1415, 0.3945], [0.1422, 0.4069], [0.1395, 0.4194], [0.1325, 0.4275], [0.1235, 0.4305], [0.1111, 0.4305],
+      [0.0986, 0.4272], [0.0862, 0.4215], [0.0737, 0.4173], [0.0612, 0.4155], [0.0488, 0.4173], [0.0385, 0.4225],
+      // the cutaway wall then runs straight up the side of the heel (≥ the neck's half-width)
+      [0.0305, 0.4335], [0.0292, 0.45], [0.029, 0.477], [0.0278, 0.4885], [0.02, 0.4898], [0, 0.49]],
+  },
+
+  // Clifton A1 GS Mini — compact, no cutaway. Traced from reference/a1-gsmini-front.png: the bridge sits
+  // where a 597 mm (23.5") scale puts it with the neck joined at the 14th fret, which sizes the body at
+  // ≈ 432 mm long · 363 lower bout · 225 waist · 255 upper bout (GS Mini proportions). Same neck build,
+  // bridge, headstock and hardware as the other A1s; depths are estimates (not visible in the photos).
+  gsMini: {
+    length: 0.432, depth: 0.108, depthNeck: 0.09, soundhole: { y: 0.288, r: 0.047 }, fbToSoundhole: true,
+    scale: 0.597, frets: 20, nutW: 0.043, fbW12: 0.054, dots: [3, 5, 7, 9, 12, 15, 17],
+    binding: false, pickguard: false, rosette: false, satin: true,
+    bridge: 'belly', tuners: 'black', headstock: 'a1', headFace: 'rosewoodFace', topWood: 'spruceA1',
+    pinDots: false, interior: 'a1', labelStyle: 'a1',
+    finishes: { natural: { top: 'natural', body: 'sapele', neck: 'neckA1' } },
+    pts: [[0, 0], [0.0592, 0.0059], [0.102, 0.0178], [0.1237, 0.0296], [0.1395, 0.0414], [0.1503, 0.0533],
+      [0.1595, 0.0651], [0.1668, 0.077], [0.172, 0.0888], [0.1766, 0.1007], [0.1789, 0.1125], [0.1806, 0.1243],
+      [0.1816, 0.1362], [0.1809, 0.148], [0.1793, 0.1599], [0.1766, 0.1717], [0.1733, 0.1835], [0.1684, 0.1954],
+      [0.1618, 0.2072], [0.1546, 0.2191], [0.146, 0.2309], [0.1372, 0.2427], [0.1283, 0.2546], [0.1201, 0.2664],
+      [0.1145, 0.2783], [0.1125, 0.2901], [0.1141, 0.302], [0.1168, 0.3138], [0.1201, 0.3256], [0.1237, 0.3375],
+      [0.126, 0.3493], [0.1263, 0.3612], [0.1263, 0.373], [0.124, 0.3848], [0.1191, 0.3967], [0.1105, 0.4085],
+      [0.096, 0.4204], [0.074, 0.4296], [0.035, 0.4315], [0, 0.432]],
+  },
 };
 
 function outline(profile, n = 300) {
