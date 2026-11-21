@@ -814,6 +814,28 @@ body.ready .hero-copy { opacity: 1; transform: none; }
 .builder-actions .btn-ghost { flex: 1; justify-content: center; padding: 10px 12px; font-size: 13.5px; border-radius: 12px; }
 .builder-panel .btn-gold { width: 100%; border: 0; cursor: pointer; }
 
+/* ================================================================ HOME: shop buttons (where the lineup was) */
+.home-cta {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+  padding: 72px 40px; max-width: 1100px; margin: 0 auto;
+}
+.home-cta-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-decoration: none; color: inherit;
+  padding: 32px 30px; border-radius: 20px; background: var(--bg-2); border: 1px solid var(--line);
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+.home-cta-card:hover, .home-cta-card:focus-visible { transform: translateY(-3px); border-color: rgba(253, 184, 63, 0.45); box-shadow: 0 24px 50px -26px rgba(0, 0, 0, 0.9); outline: none; }
+.home-cta-card b { font-size: clamp(26px, 3vw, 38px); font-weight: 800; line-height: 1; text-transform: uppercase; color: var(--gold); }
+.home-cta-card small { color: #c9c5bc; font-size: 15px; line-height: 1.5; margin-bottom: 14px; }
+.home-cta-card .btn-gold, .home-cta-card .btn-ghost { margin-top: auto; }
+.home-cta-card:hover .btn-ghost { border-color: var(--gold); color: var(--gold); }
+.home-cta-card:hover .btn-ghost svg { transform: translateX(3px); }
+@media (max-width: 720px) {
+  .home-cta { grid-template-columns: 1fr; padding: 48px 16px; gap: 12px; }
+  .home-cta-card { padding: 24px 20px; }
+  .home-cta-card .btn-gold, .home-cta-card .btn-ghost { align-self: stretch; justify-content: center; text-align: center; }
+}
+
 /* ================================================================ SHOP (guitars.html, no ?model) */
 .browsing #viewer, .browsing .lineup { display: none; }
 .browsing #shop[hidden] { display: block; }   /* shown from first paint; shop.js fills it */

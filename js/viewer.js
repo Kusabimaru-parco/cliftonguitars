@@ -8,7 +8,7 @@ import {
 } from './stage.js';
 import { initSite, renderLineupCards, openCart } from './site.js';
 import { cart } from './cart.js';
-import { ELECTRIC_CARD, thumbSrc } from './catalog.js';
+import { thumbSrc } from './catalog.js';
 
 const $ = (id) => document.getElementById(id);
 const wrap = $('canvasWrap');
@@ -587,21 +587,13 @@ function renderBuy(model) {
     host.appendChild(b);
   }
 }
-// small picture for the cart, taken from the model's lineup thumbnail
-function cartPicture(model) {
-  const img = [...document.querySelectorAll('#lineupGrid .card img')].find((i) => i.alt.startsWith(model.name));
-  if (!img?.complete || !img.naturalWidth) return null;
-  const c = document.createElement('canvas'); c.width = 240; c.height = 300;
-  const g = c.getContext('2d'); g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, 240, 300); g.drawImage(img, 0, 0, 240, 300);
-  return c.toDataURL('image/jpeg', 0.82);
-}
 $('addToCart').addEventListener('click', () => {
   const model = current?.model, v = model?.variants?.find((x) => x.id === variantId);
   if (!v) return;
   cart.add({
     title: `Clifton ${model.name}`,
     subtitle: v.pickup ? `With pickup · ${v.pickup}` : v.label,
-    image: cartPicture(model),
+    image: thumbSrc(model.id),   // the guitar's saved picture (assets/thumbs/)
     url: `guitars.html?model=${model.id}`, linkLabel: 'View in 3D',
     lines: [
       { label: 'Model', value: `${model.series} · ${model.name}` },
@@ -804,12 +796,22 @@ wordmark = await initSite();
 await loadModel(requested);
 requestAnimationFrame(frame);
 
-// lineup under the viewer: pre-rendered pictures, not live 3D renders
-const lineupGrid = $('lineupGrid');
-if (lineupGrid) {
-  renderLineupCards(lineupGrid, [...MODELS, ELECTRIC_CARD].map((m) => ({ model: m, src: thumbSrc(m.id) })), () => (m) => {
-    stage.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
-    switchTo(m);
-  });
+renderSeriesLineup(requested);
 }
+
+// Lineup under the viewer: the other guitars of the SAME series only (no Clifton Customs card), so each
+// series (A1 today; A2 / S Series later) keeps to itself. Re-drawn when the visitor switches guitars.
+function renderSeriesLineup(model) {
+  const grid = $('lineupGrid');
+  if (!grid) return;
+  grid.querySelectorAll('.card:not(.card-soon)').forEach((c) => c.remove());
+  const others = MODELS.filter((m) => m.series === model.series && m.id !== model.id);
+  $('lineupTitle').textContent = `More from the ${model.series}`;
+  const soon = grid.querySelector('.card-soon');   // "More A Series · coming soon" belongs to the A Series only
+  if (soon) soon.hidden = model.series !== 'A Series';
+  grid.closest('.lineup').hidden = !others.length && (!soon || soon.hidden);
+  renderLineupCards(grid, others.map((m) => ({ model: m, src: thumbSrc(m.id) })), () => (m) => {
+    stage.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    switchTo(m).then(() => renderSeriesLineup(m));
+  });
 }
