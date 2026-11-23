@@ -38,6 +38,22 @@ body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
 }
+
+/* scrollbars: thin dark pill on a black track, gold while you grab it (page, builder panel, cart …) */
+html { color-scheme: dark; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb {
+  background: #3a3a40; border-radius: 999px;
+  border: 3px solid var(--bg-2);               /* insets the pill from the edges */
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-thumb:active { background: var(--gold); }
+::-webkit-scrollbar-corner { background: var(--bg-2); }
+::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {   /* Firefox */
+  * { scrollbar-width: thin; scrollbar-color: #3a3a40 var(--bg-2); }
+}
 button { font: inherit; color: inherit; cursor: pointer; }
 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
