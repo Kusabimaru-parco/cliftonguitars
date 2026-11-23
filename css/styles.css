@@ -843,6 +843,54 @@ body.ready .hero-copy { opacity: 1; transform: none; }
 .builder-actions .btn-ghost { flex: 1; justify-content: center; padding: 10px 12px; font-size: 13.5px; border-radius: 12px; }
 .builder-panel .btn-gold { width: 100%; border: 0; cursor: pointer; }
 
+/* ================================================================ CLIFTON CUSTOMS start page (customs.html) */
+.cs-stage {
+  position: relative; height: calc(100svh - var(--header-h)); min-height: 560px; overflow: hidden;
+  background: var(--stage-bg), var(--black);
+}
+.cs-canvas { position: absolute; inset: 0; z-index: 1; }
+/* gold spotlight behind the guitar: dim while assembled, blooms when it comes apart */
+.cs-stage::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 34% 58% at 68% 42%, rgba(253, 184, 63, 0.16), rgba(253, 184, 63, 0.05) 45%, transparent 70%),
+    radial-gradient(ellipse 18% 30% at 68% 30%, rgba(255, 230, 180, 0.08), transparent 70%);
+  opacity: 0.45; transition: opacity 1.4s cubic-bezier(0.2, 0.7, 0.2, 1), transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: scale(0.92);
+}
+.cs-stage.exploded::before { opacity: 1; transform: none; }
+@media (max-width: 860px) {
+  .cs-stage::before { background: radial-gradient(ellipse 70% 40% at 50% 30%, rgba(253, 184, 63, 0.16), rgba(253, 184, 63, 0.05) 45%, transparent 72%); }
+}
+.cs-canvas canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; outline: none; }
+.cs-copy {
+  position: absolute; z-index: 3; left: 8vw; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px; max-width: 460px;
+}
+.cs-copy h1 { margin: 0; font-size: clamp(44px, 5.6vw, 80px); font-weight: 800; line-height: 0.95; text-transform: uppercase; letter-spacing: -0.02em; color: var(--gold); }
+.cs-tag { margin: 0; font-size: clamp(18px, 1.6vw, 22px); font-weight: 700; color: var(--text); }
+.cs-sub { margin: 0 0 6px; color: #c9c5bc; font-size: 16px; line-height: 1.55; }
+.cs-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.cs-actions a, .cs-actions button { height: 54px; padding: 0 24px; display: inline-flex; align-items: center; gap: 9px; border-radius: 14px; font-size: 16px; cursor: pointer; }
+.cs-actions .btn-gold { box-shadow: 0 10px 30px -12px rgba(253, 184, 63, 0.6); }
+.cs-actions .btn-ghost { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(8px); }
+.cs-actions .btn-ghost svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; transition: transform 0.4s; }
+.cs-actions .btn-ghost[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: rgba(253, 184, 63, 0.1); }
+.cs-actions .btn-ghost[aria-pressed="true"] svg { transform: rotate(45deg); }
+.cs-hint { position: absolute; z-index: 3; bottom: 18px; left: 0; right: 0; margin: 0; text-align: center; font-size: 12.5px; color: #77746d; pointer-events: none; }
+@media (max-width: 860px) {
+  .cs-stage { min-height: 600px; }
+  .cs-copy { left: 16px; right: 16px; top: auto; bottom: 46px; transform: none; max-width: none; align-items: stretch; gap: 10px; }
+  .cs-copy::before {   /* soft dark wash so the copy reads over the guitar */
+    content: ''; position: absolute; z-index: -1; inset: -60px -16px -46px; background: linear-gradient(transparent, rgba(5, 5, 6, 0.9) 45%);
+  }
+  .cs-copy h1 { font-size: 40px; }
+  .cs-sub { font-size: 14.5px; }
+  .cs-actions { flex-wrap: nowrap; }
+  .cs-actions a, .cs-actions button { flex: 1; justify-content: center; padding: 0 12px; height: 50px; font-size: 15px; }
+  .cs-hint { bottom: 14px; }
+}
+
 /* ================================================================ HOME: shop buttons (where the lineup was) */
 .home-cta {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;

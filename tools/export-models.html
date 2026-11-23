@@ -44,7 +44,7 @@
     import { createModel, renderThumbnails } from '../js/stage.js';
     import { MODELS } from '../js/models.js';
     import { DEFAULT_BUILD, ELECTRIC_CARD } from '../js/catalog.js';
-    import { loadWordmark } from '../js/logo.js';
+    import { loadWordmark, WORDMARK_SRC } from '../js/logo.js';
 
     // A Series (procedural, from js/guitar.js) + Clifton Customs showcase builds (from js/electric.js)
     const JOBS = [
@@ -108,7 +108,7 @@
     // list pictures: the same three-quarter shot the site used to render on every visit, saved once as WebP
     document.getElementById('thumbs').addEventListener('click', async (e) => {
       e.target.disabled = true; rows.innerHTML = ''; window.__thumbs = { done: false, results: [] };
-      const wordmark = await loadWordmark();
+      const wordmark = await loadWordmark('../' + WORDMARK_SRC);   // page lives in tools/
       const shots = await renderThumbnails([...MODELS, ELECTRIC_CARD], { wordmark, width: 600, height: 750 });
       for (const { model, src } of shots) {
         const tr = document.createElement('tr'); rows.appendChild(tr);
@@ -124,7 +124,7 @@
 
     btn.addEventListener('click', async () => {
       btn.disabled = true; rows.innerHTML = ''; window.__export = { done: false, results: [] };
-      const wordmark = await loadWordmark();
+      const wordmark = await loadWordmark('../' + WORDMARK_SRC);   // page lives in tools/
       const exporter = new GLTFExporter();
       for (const job of JOBS) {
         const tr = document.createElement('tr');

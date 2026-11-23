@@ -25,7 +25,7 @@ function canvasTexture(w, h, draw, { srgb = true, wrap = true } = {}) {
 }
 
 // Grain runs vertically in the canvas (texture v / world y).
-function drawGrain(g, w, h, { base, dark, light, lines = 200, wobble = 5, alpha = 0.25, seed = 1, flame = 0, ribbon = false }) {
+function drawGrain(g, w, h, { base, dark, light, lines = 200, wobble = 5, alpha = 0.25, seed = 1, flame = 0, ribbon = false, pores = null }) {
   const r = rng(seed);
   g.fillStyle = base; g.fillRect(0, 0, w, h);
   if (ribbon) { // ribbon-stripe figure: broad alternating light/dark bands along the grain
@@ -57,6 +57,16 @@ function drawGrain(g, w, h, { base, dark, light, lines = 200, wobble = 5, alpha 
     g.fillStyle = r() < 0.5 ? light : dark;
     g.fillRect(r() * w, r() * h, 6 + r() * 30, 1 + r() * 2);
   }
+  // open pores (sapele / mahogany under a satin finish): short dark dashes running with the grain
+  if (pores) {
+    const { n, len: [l0, l1], w: [w0, w1], alpha: [a0, a1] = [0.2, 0.45] } = pores;
+    g.fillStyle = dark;
+    for (let i = 0; i < n; i++) {
+      g.globalAlpha = a0 + r() * (a1 - a0);
+      const pw = w0 + r() * (w1 - w0), pl = l0 + r() * (l1 - l0);
+      g.fillRect(r() * w, r() * h, pw, pl);
+    }
+  }
   g.globalAlpha = 1;
 }
 
@@ -73,6 +83,12 @@ const WOODS = {
   sapele: { base: '#7d5233', dark: '#54331b', light: '#9c7050', lines: 260, wobble: 3, alpha: 0.36, seed: 17, flame: 80, ribbon: true },
   // A1 neck + back of headstock: warm orange-brown satin (owner's side-frets video; species not listed)
   neckA1: { base: '#b07a48', dark: '#86552c', light: '#c99566', lines: 200, wobble: 3, alpha: 0.3, seed: 29, flame: 60 },
+  // A1 neck, headstock and body back & sides, all one wood (owner's headstock render): warm reddish-brown
+  // sapele under satin, with open pores. The body version adds the ribbon stripe; the colours are identical.
+  sapeleA1: { base: '#a46f4b', dark: '#6e4128', light: '#be8b63', lines: 220, wobble: 3, alpha: 0.3, seed: 29, flame: 60,
+    pores: { n: 7000, len: [10, 30], w: [1.2, 2.6] } },
+  sapeleA1Body: { base: '#a46f4b', dark: '#6e4128', light: '#be8b63', lines: 260, wobble: 3, alpha: 0.3, seed: 17, flame: 80, ribbon: true,
+    pores: { n: 9000, len: [4, 12], w: [1, 1.8] } },
   // A1 headstock face: reddish-brown rosewood veneer with dark streaks (owner's headstock photo)
   rosewoodFace: { base: '#4e2718', dark: '#22100a', light: '#76412a', lines: 140, wobble: 6, alpha: 0.5, seed: 33, flame: 40 },
   // A1 interior lining / braces: pale spruce-like strips (owner's soundhole photo)
@@ -116,7 +132,7 @@ export const PROFILES = {
     binding: 'strip', pickguard: false, rosette: false, satin: true,  // cream strip binding (owner's request), plain soundhole, satin
     bridge: 'belly', tuners: 'black', headstock: 'a1', headFace: 'rosewoodFace', topWood: 'spruceA1',
     pinDots: false, interior: 'a1', labelStyle: 'a1',
-    finishes: { natural: { top: 'natural', body: 'sapele', neck: 'neckA1' } },
+    finishes: { natural: { top: 'natural', body: 'sapeleA1Body', neck: 'sapeleA1' } },   // neck, headstock, back & sides match
     // bass side (mirrored to the left)
     pts: [[0, 0], [0.079, 0.011], [0.11, 0.023], [0.129, 0.034], [0.145, 0.046], [0.168, 0.069], [0.184, 0.091],
       [0.193, 0.114], [0.2, 0.137], [0.2025, 0.16], [0.2, 0.183], [0.194, 0.206], [0.184, 0.229], [0.17, 0.252],
@@ -142,7 +158,7 @@ export const PROFILES = {
     binding: false, pickguard: false, rosette: false, satin: true,
     bridge: 'belly', tuners: 'black', headstock: 'a1', headFace: 'rosewoodFace', topWood: 'spruceA1',
     pinDots: false, interior: 'a1', labelStyle: 'a1',
-    finishes: { natural: { top: 'natural', body: 'sapele', neck: 'neckA1' } },
+    finishes: { natural: { top: 'natural', body: 'sapeleA1Body', neck: 'sapeleA1' } },   // neck, headstock, back & sides match
     pts: [[0, 0], [0.073, 0.0083], [0.1166, 0.0208], [0.1415, 0.0332], [0.1581, 0.0457], [0.1699, 0.0581], [0.1789, 0.0706],
       [0.1851, 0.0831], [0.19, 0.0955], [0.1941, 0.108], [0.1962, 0.1266], [0.1962, 0.1453], [0.1941, 0.1703],
       [0.1921, 0.1827], [0.1886, 0.1952], [0.1837, 0.2076], [0.1782, 0.2201], [0.172, 0.2325], [0.1644, 0.245],
@@ -172,7 +188,7 @@ export const PROFILES = {
     binding: false, pickguard: false, rosette: false, satin: true,
     bridge: 'belly', tuners: 'black', headstock: 'a1', headFace: 'rosewoodFace', topWood: 'spruceA1',
     pinDots: false, interior: 'a1', labelStyle: 'a1',
-    finishes: { natural: { top: 'natural', body: 'sapele', neck: 'neckA1' } },
+    finishes: { natural: { top: 'natural', body: 'sapeleA1Body', neck: 'sapeleA1' } },   // neck, headstock, back & sides match
     pts: [[0, 0], [0.0592, 0.0059], [0.102, 0.0178], [0.1237, 0.0296], [0.1395, 0.0414], [0.1503, 0.0533],
       [0.1595, 0.0651], [0.1668, 0.077], [0.172, 0.0888], [0.1766, 0.1007], [0.1789, 0.1125], [0.1806, 0.1243],
       [0.1816, 0.1362], [0.1809, 0.148], [0.1793, 0.1599], [0.1766, 0.1717], [0.1733, 0.1835], [0.1684, 0.1954],
@@ -279,22 +295,188 @@ function RoundedBoxGeometryLite(w, h, d, r) {
   return g;
 }
 
-// ---------------------------------------------------------------- A1 bridge (owner's SVG)
-// Outline copied verbatim from reference/Bridge.svg (viewBox in mm; x 90 = centreline; top edge at
-// y 10.56, belly bottom 49.44, wing tips to x 11.3–168.7). The SVG doesn't mark the saddle, so the
-// saddle centre line is placed 5.7 mm below the top edge (owner's bridge photo) → SVG y 16.26.
-const A1_BRIDGE_PATH = 'M 90.00,10.56 C 119.59,10.56 144.95,11.40 166.51,11.51 C 169.78,17.95 169.47,29.58 165.35,37.29 C 160.80,35.07 154.46,34.54 147.59,35.71 C 134.38,38.03 117.48,49.44 90.00,49.44 C 62.52,49.44 45.62,38.03 32.41,35.71 C 25.54,34.54 19.20,35.07 14.65,37.29 C 10.53,29.58 10.22,17.95 13.49,11.51 C 35.05,11.40 60.41,10.56 90.00,10.56 Z';
-const A1_BRIDGE_SADDLE_Y = 16.26;
-function createCliftonBridgeShape() {
-  const shape = new THREE.Shape();
-  applySvgPath(shape, A1_BRIDGE_PATH, { cx: 90, nutY: A1_BRIDGE_SADDLE_Y });   // origin = saddle centre, +y toward the neck
-  return shape;
+// ---------------------------------------------------------------- A1 bridge (Clifton A1 carved rosewood belly bridge)
+// Units in mm inside the helpers; origin (0, 0) sits on the saddle centreline, +y toward neck, +x = treble.
+const A1_BRIDGE = {
+  half: 78, front: 8.0, edgeR: 0.95,
+  hCentre: 8.55, hWing: 5.5, hEnd: 4.9, ramp: [39.2, 51.5],
+  pocket: { rx: 34.6, ry: 18.2, yc: -25.8, p: 2.65, depth: 1.80 },
+  saddle: { half: 35.5, width: 3.0, slope: 0.036 },
+  pins: { y: -15.2, xs: [-26.25, -15.75, -5.25, 5.25, 15.75, 26.25], r: 3.45 },
+};
+
+const smooth01 = (x, a, b) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+// Back-edge depth (mm) from front edge → belly → concave wing waist → gently flared wing tip
+const A1_DEPTH_KNOTS = [
+  [0.0,  39.0,  0.00],   // centre of belly
+  [22.0, 36.6, -0.22],   // belly curve
+  [40.0, 29.8, -0.45],   // belly-to-wing sweep
+  [54.0, 23.6, -0.30],   // entering concave waist
+  [65.0, 21.8,  0.00],   // narrowest point of wing waist
+  [78.0, 24.4,  0.34],   // subtle outward flare at wing tip
+];
+function a1BridgeDepth(x) {
+  const s = Math.min(A1_BRIDGE.half, Math.abs(x));
+  for (let k = 0; k < A1_DEPTH_KNOTS.length - 1; k++) {
+    const [s0, y0, m0] = A1_DEPTH_KNOTS[k], [s1, y1, m1] = A1_DEPTH_KNOTS[k + 1];
+    if (s <= s1 || k === A1_DEPTH_KNOTS.length - 2) {
+      const h = s1 - s0, t = (s - s0) / h, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * m0
+        + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * m1;
+    }
+  }
+  return 24.4;
 }
-// Pins (owner's photo): straight row 14.5 mm below the saddle centre, 10.6 mm apart
-const CLIFTON_PINS_MM = [-26.5, -15.9, -5.3, 5.3, 15.9, 26.5].map((x, i) => ({ pin: i + 1, x, y: -14.5 }));
-// Raised wing faces: narrow in straight lines from the centre block (x ±41.5) to the wing ends, kept
-// inside the SVG outline (top edge ≈ +5.4 there, belly ≈ −24.5; wing tips ≈ +4.8 / −21).
-const WING_FACE = { x0: 41.5, top0: 5.2, bot0: -21.5, x1: 74.5, top1: 1.0, bot1: -16.0 };
+
+// Relief height (mm): raised centre block + smooth wing S-ramp + horseshoe pin pocket + routed saddle slot
+function a1BridgeRelief(x, y) {
+  const B = A1_BRIDGE, s = Math.abs(x);
+  const hWing = B.hWing + (B.hEnd - B.hWing) * smooth01(s, B.ramp[1], B.half);
+  const hCentre = B.hCentre - 0.20 * (s / 44) ** 2;
+  let h = hCentre + (hWing - hCentre) * smooth01(s, B.ramp[0], B.ramp[1]);
+
+  // Curved horseshoe / crescent pin pocket wrapping around all 6 pins and opening cleanly to the belly edge
+  const K = B.pocket;
+  const nx = s / K.rx, ny = Math.max(0, y - K.yc) / K.ry;
+  const sdPocket = (Math.pow(Math.pow(nx, K.p) + Math.pow(ny, K.p), 1 / K.p) - 1) * 23;
+  h -= K.depth * (1 - smooth01(sdPocket, -1.1, 1.15));
+
+  // Crisp routed saddle slot so the bone saddle visibly sits inlaid in the rosewood
+  const ang = Math.atan(B.saddle.slope), ca = Math.cos(ang), sa = Math.sin(ang);
+  const lx = x * ca + y * sa, ly = -x * sa + y * ca;
+  const distSlot = Math.hypot(Math.max(0, Math.abs(lx) - (B.saddle.half - 1.5)), ly) - 1.72;
+  h -= 1.8 * (1 - smooth01(distSlot, -0.32, 0.32));
+  return h;
+}
+
+// Helper: non-uniform [0..1] grid clustered near 0 and 1 for crisp outer round-overs
+function edgeCluster(nMid, edgePts) {
+  const a = edgePts[edgePts.length - 1], b = 1 - a, out = [...edgePts];
+  for (let k = 1; k <= nMid; k++) out.push(a + ((b - a) * k) / (nMid + 1));
+  for (let k = edgePts.length - 1; k >= 0; k--) out.push(1 - edgePts[k]);
+  return out;
+}
+
+// Carved rosewood bridge mesh: convex wing tips, concave back waists, smooth S-ramps, crescent pin pocket, side walls
+function a1BridgeGeometry() {
+  const B = A1_BRIDGE, r = B.edgeR, mm = 0.001;
+  const uGrid = edgeCluster(160, [0, 0.0012, 0.0035, 0.007, 0.012, 0.018]).map((u) => 2 * u - 1);
+  const vGrid = edgeCluster(72, [0, 0.003, 0.008, 0.016, 0.028, 0.044]);
+  const nU = uGrid.length, nV = vGrid.length;
+  const pos = [], uv = [], idx = [];
+
+  for (const u of uGrid) {
+    for (const v of vGrid) {
+      const tipCurve = 1.7 * (2 * v - 1) ** 2;                  // gently convex arched wing tips
+      const xMax = B.half - tipCurve;
+      const x = u * xMax, yF = B.front, yB = B.front - a1BridgeDepth(x);
+      const y = yB + v * (yF - yB);
+      const dEnd = xMax - Math.abs(x), dFront = yF - y;
+      const slopeB = (a1BridgeDepth(Math.abs(x) + 0.2) - a1BridgeDepth(Math.abs(x) - 0.2)) / 0.4;
+      const dBack = (y - yB) / Math.sqrt(1 + slopeB * slopeB);
+      const d = Math.max(0, Math.min(dEnd, dFront, dBack, r));
+      const z = a1BridgeRelief(x, y) - (r - Math.sqrt(Math.max(0, r * r - (r - d) ** 2)));
+      pos.push(x * mm, y * mm, z * mm);
+      uv.push((y * mm) / 0.10 + 0.5, (x * mm) / 0.16 + 0.5);    // wood grain runs lengthwise along x
+    }
+  }
+  for (let i = 0; i < nU - 1; i++) for (let j = 0; j < nV - 1; j++) {
+    const a = i * nV + j, b = a + nV;
+    idx.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+
+  // Outer perimeter side walls down onto the spruce top
+  const ring = [];
+  for (let i = 0; i < nU; i++) ring.push(i * nV);
+  for (let j = 1; j < nV; j++) ring.push((nU - 1) * nV + j);
+  for (let i = nU - 2; i >= 0; i--) ring.push(i * nV + nV - 1);
+  for (let j = nV - 2; j > 0; j--) ring.push(j);
+  const base = pos.length / 3;
+  for (const k of ring) {
+    const x = pos[k * 3], y = pos[k * 3 + 1], z = pos[k * 3 + 2];
+    pos.push(x, y, z, x, y, -0.0003);
+    uv.push(z / 0.10 + 0.5, x / 0.16 + 0.5, 0.5, x / 0.16 + 0.5);
+  }
+  for (let k = 0; k < ring.length; k++) {
+    const a = base + k * 2, b = base + ((k + 1) % ring.length) * 2;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+// Compensated bone saddle: straight uniform 3.0 mm footprint (no paddle bulge), arched crown,
+// and a carved B-string compensation notch on the front-top ridge
+function a1SaddleGeometry() {
+  const S = A1_BRIDGE.saddle, Lh = S.half, Wh = S.width / 2, mm = 0.001;
+  const ang = Math.atan(S.slope), ca = Math.cos(ang), sa = Math.sin(ang);
+  const nU = 128, nV = 22;
+  const pos = [], uv = [], idx = [];
+
+  for (let i = 0; i <= nU; i++) {
+    const u = (2 * i) / nU - 1, lx = u * Lh;
+    const endDx = Math.max(0, Math.abs(lx) - (Lh - Wh));
+    const locHw = Math.max(0.08, Math.sqrt(Math.max(0, Wh * Wh - endDx * endDx)));
+    const archZ = 11.75 - 0.85 * (lx / Lh) ** 2;
+    const bNotch = smooth01(lx, 10.2, 11.4) * (1 - smooth01(lx, 20.0, 21.2));   // 2nd (B) string notch
+    const yCrest = 0.35 - 1.25 * bNotch;
+    const tipDrop = 0.40 * (endDx / Wh) ** 2;
+    for (let j = 0; j <= nV; j++) {
+      const v = (2 * j) / nV - 1, ly = v * locHw;
+      const notchCut = bNotch * smooth01(ly, -0.50, 0.25) * 1.15;
+      const dCrest = (ly - yCrest) / (Wh + 0.45);
+      const sz = archZ - notchCut - 0.50 * dCrest * dCrest - 0.30 * Math.abs(v) ** 4 - tipDrop;
+      const sx = lx * ca - ly * sa, sy = lx * sa + ly * ca;
+      pos.push(sx * mm, sy * mm, sz * mm);
+      uv.push(i / nU, j / nV);
+    }
+  }
+  const stride = nV + 1;
+  for (let i = 0; i < nU; i++) for (let j = 0; j < nV; j++) {
+    const a = i * stride + j, b = a + stride;
+    idx.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+
+  // Straight vertical walls down into the routed saddle slot (z = 6.0 mm)
+  const ring = [];
+  for (let i = 0; i <= nU; i++) ring.push(i * stride);
+  for (let j = 1; j <= nV; j++) ring.push(nU * stride + j);
+  for (let i = nU - 1; i >= 0; i--) ring.push(i * stride + nV);
+  for (let j = nV - 1; j > 0; j--) ring.push(j);
+  const base = pos.length / 3;
+  for (const k of ring) {
+    const x = pos[k * 3], y = pos[k * 3 + 1], z = pos[k * 3 + 2];
+    pos.push(x, y, z, x, y, 0.006);
+    uv.push(0.5, 1, 0.5, 0);
+  }
+  for (let k = 0; k < ring.length; k++) {
+    const a = base + k * 2, b = base + ((k + 1) % ring.length) * 2;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+// Exact string contact point (local y & z in metres) on the arched, compensated A1 saddle
+function a1SaddleContact(xMeters) {
+  const S = A1_BRIDGE.saddle, lx = xMeters * 1000;
+  const bNotch = smooth01(lx, 10.2, 11.4) * (1 - smooth01(lx, 20.0, 21.2));
+  const ly = 0.35 - 1.25 * bNotch;
+  const z = (11.75 - 0.85 * (lx / S.half) ** 2) * 0.001;
+  const y = (S.slope * lx + ly) * 0.001;
+  return { y, z };
+}
 
 // ---------------------------------------------------------------- SVG outlines
 // A1 headstock outline, copied verbatim from reference/headstock-shape.svg (units: mm).
@@ -317,9 +499,21 @@ function applySvgPath(shape, d, { cx = 0, nutY = 0 } = {}) {
   }
 }
 
+// The same, tabulated every 0.1 mm from a fine trace of the outline (fast enough for the neck loft,
+// and within ~0.01 mm of the curves, so the wood's sides meet the edge of the face veneer exactly).
+function halfWidthTable(shape, top, step = 0.0001) {
+  const exact = halfWidthFromShape(shape, 3000);
+  const n = Math.ceil(top / step), tab = new Float64Array(n + 2);
+  for (let i = 0; i <= n + 1; i++) tab[i] = exact(Math.min(top, i * step));
+  return (y) => {
+    const f = THREE.MathUtils.clamp(y, 0, top) / step, i = Math.min(n, Math.floor(f)), t = f - i;
+    return tab[i] + (tab[i + 1] - tab[i]) * t;
+  };
+}
+
 // Half-width of a (left-right symmetric) shape at height y, sampled from its outline.
-function halfWidthFromShape(shape) {
-  const pts = shape.getSpacedPoints(400).filter((p) => p.x >= 0).sort((a, b) => a.y - b.y);
+function halfWidthFromShape(shape, samples = 400) {
+  const pts = shape.getSpacedPoints(samples).filter((p) => p.x >= 0).sort((a, b) => a.y - b.y);
   return (y) => {
     let best = 0;
     for (let k = 1; k < pts.length; k++) {
@@ -430,6 +624,9 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   const nutW = P.nutW ?? 0.043;
   const fbEndW = P.fbW12 ? nutW + (P.fbW12 - nutW) * (nutY - fbEnd) / (nutY - fretY(12)) : 0.057;
   const fbHalf = (y) => THREE.MathUtils.lerp(fbEndW, nutW, (y - fbEnd) / (nutY - fbEnd)) / 2;
+  // neck depth under the fretboard (owner's side render): 15.5 mm at the nut → 17.5 mm at the body joint,
+  // i.e. ~21.5 → 23.5 mm with the 6 mm fretboard
+  const neckDepthAt = (y) => THREE.MathUtils.lerp(0.0175, 0.0155, THREE.MathUtils.clamp((y - joinY) / (nutY - joinY), 0, 1));
 
   const group = new THREE.Group();
   group.name = 'guitar';
@@ -443,7 +640,7 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     body: new THREE.MeshPhysicalMaterial({ ...gloss }),
     neck: new THREE.MeshPhysicalMaterial(P.satin ? { roughness: 0.55, clearcoat: 0.15, clearcoatRoughness: 0.5 } : { roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.2 }),
     tuner: P.tuners === 'black'
-      ? new THREE.MeshStandardMaterial({ color: '#141414', metalness: 0.75, roughness: 0.32 })   // die-cast black
+      ? Object.assign(new THREE.MeshStandardMaterial({ color: '#171718', metalness: 0.6, roughness: 0.5 }), { userData: { envScale: 0.7 } })   // matte black die-cast
       : new THREE.MeshStandardMaterial({ color: '#e8e8ea', metalness: 1, roughness: 0.12 }),
     fretboard: new THREE.MeshStandardMaterial({ map: wood('rosewood', 1 / 0.06, 1 / 0.5), roughness: 0.7 }),
     bridge: new THREE.MeshStandardMaterial({ map: wood('rosewood', 1 / 0.16, 1 / 0.03), roughness: 0.55 }),
@@ -548,7 +745,19 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     const cy = SH.y - 0.09;
     brace(0.34, 0, cy, THREE.MathUtils.degToRad(40));
     brace(0.34, 0, cy, THREE.MathUtils.degToRad(-40));
-    brace(0.25, 0, SH.y + SH.r + 0.022, 0);
+    // the truss rod runs down the neck ~9.5 mm under the top; on the A1 it is adjusted through the
+    // soundhole: a hole drilled through the upper transverse brace lines up with the nut on the neck block
+    const TRUSS_Z = -0.0095;
+    if (P.interior === 'a1') {
+      const [l, bx, by] = fitted(0.25, 0, SH.y + SH.r + 0.022, 0);
+      const sh = new THREE.Shape([new THREE.Vector2(-l / 2, -0.006), new THREE.Vector2(l / 2, -0.006), new THREE.Vector2(l / 2, 0.006), new THREE.Vector2(-l / 2, 0.006)]);
+      sh.holes.push(new THREE.Path().absarc(-bx, TRUSS_Z + 0.009, 0.0042, 0, Math.PI * 2, true));
+      const g = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: false, curveSegments: 28 });
+      g.rotateX(Math.PI / 2);                                       // outline → x/z, drilled along y
+      add(g, braceMat).position.set(bx, by + 0.004, -0.009);
+    } else {
+      brace(0.25, 0, SH.y + SH.r + 0.022, 0);
+    }
     into('back');
     const a1Label = P.labelStyle === 'a1';
     const label = add(
@@ -562,6 +771,25 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
       mats.interior.color.set('#4a2716');
       braceMat.color.set('#a8865a');
       const liningMat = new THREE.MeshStandardMaterial({ map: wood('lining', 1 / 0.05, 1 / 0.05), roughness: 0.9 });
+
+      // neck block glued inside the rim at the neck end (built at the tapered depth; it lives with the
+      // braces, which the back/sides taper doesn't warp), with the truss rod's brass adjusting nut standing
+      // out of a drilled recess in its face — what you see through the soundhole, past the brace's hole
+      {
+        into('braces');
+        const nbW = 0.046, nbT = 0.02, nbD = DN - 0.006, face = L - 0.0035 - nbT;
+        mats.neckBlock ||= new THREE.MeshStandardMaterial({ map: wood('sapele', 1 / 0.05, 1 / 0.05), roughness: 0.85 });
+        add(new THREE.BoxGeometry(nbW, nbT, nbD), mats.neckBlock).position.set(0, face + nbT / 2, -0.003 - nbD / 2);
+        const dark = mats.holeDark ||= new THREE.MeshBasicMaterial({ color: '#060403' });
+        const recess = add(new THREE.CircleGeometry(0.0056, 32), dark);
+        recess.rotation.x = Math.PI / 2; recess.position.set(0, face - 0.0002, TRUSS_Z);     // faces the soundhole
+        const brass = mats.trussBrass ||= new THREE.MeshStandardMaterial({ color: '#b8925a', metalness: 0.85, roughness: 0.35 });
+        const nut = add(new THREE.CylinderGeometry(0.004, 0.004, 0.005, 6), brass);      // hex nut along the rod (y)
+        nut.rotation.y = Math.PI / 6; nut.position.set(0, face - 0.0025, TRUSS_Z);
+        const socket = add(new THREE.CircleGeometry(0.0019, 6), dark);                     // hex socket for the wrench
+        socket.rotation.x = Math.PI / 2; socket.position.set(0, face - 0.0051, TRUSS_Z);
+        into('back');
+      }
 
       // back braces: four transverse strips across the back (positions from D; the depth taper warps them)
       for (const y of [0.11, 0.22, 0.31, 0.415]) {
@@ -627,94 +855,45 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   }
 
   // bridge, saddle, pins
-  const bridgeTopZ = 0.0012 * 2 + 0.006;
-  // compensated (slanted) saddle: y offset per metre of x. A1 = 0.0485 (2.8°, bass end toward the tail)
-  const SADDLE_SLOPE = P.bridge === 'belly' ? 0.0485 : 0;
+  const belly = P.bridge === 'belly';
+  const bridgeTopZ = belly ? A1_BRIDGE.hCentre / 1000 : 0.0012 * 2 + 0.006;   // top of the bridge's centre
+  const pinTopZ = belly ? (A1_BRIDGE.hCentre - A1_BRIDGE.pocket.depth) / 1000 : bridgeTopZ;   // A1 pins sit in the pocket
   into('bridge');
   mark('bridge', parts.bridge, 0.078, saddleY - 0.006, bridgeTopZ);
-  const belly = P.bridge === 'belly';
-  {
-    const w = 0.155, h = 0.028, r = 0.008;
-    // A1: outline traced from the owner's spec drawing (origin = saddle centre line)
-    const s = belly ? createCliftonBridgeShape(0.001) : new THREE.Shape();
-    if (!belly) {
-      s.moveTo(-w / 2 + r, -h / 2);
-      s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-      s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-      s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-      s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-    }
-    // A1: the full outline is the thinner wing layer (5.4 mm); a raised, bevelled centre block under
-    // the saddle and pins brings the middle up to the full 8.4 mm — the wings step down from it.
-    const bGeo = new THREE.ExtrudeGeometry(s, { depth: belly ? 0.003 : 0.006, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.0012, bevelSegments: 3, curveSegments: belly ? 28 : 12 });
-    const b = add(bGeo, mats.bridge, 'bridge');
-    b.position.set(0, belly ? saddleY : saddleY - 0.006, 0.0012);
-    if (belly) {
-      // Raised centre block, cut from the SAME spec outline: its top edge and belly are the outline's
-      // own curves for |x| ≤ 40 mm (inset 0.4 mm so faces don't z-fight), so the only visible step is
-      // on the sides where the wings begin.
-      const X = WING_FACE.x0 / 1000, IN = 0.0004;
-      const pts = s.getSpacedPoints(600).filter((p) => Math.abs(p.x) <= X);
-      const mid = (Math.max(...pts.map((p) => p.y)) + Math.min(...pts.map((p) => p.y))) / 2;
-      const topRun = pts.filter((p) => p.y > mid).sort((a, b) => a.x - b.x).map((p) => new THREE.Vector2(p.x, p.y - IN));
-      const botRun = pts.filter((p) => p.y <= mid).sort((a, b) => b.x - a.x).map((p) => new THREE.Vector2(p.x, p.y + IN));
-      const c = new THREE.Shape([...topRun, ...botRun]);
-      const block = add(new THREE.ExtrudeGeometry(c, { depth: 0.0018, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.0008, bevelSegments: 4, curveSegments: 24 }), mats.bridge);
-      block.position.set(0, saddleY, bridgeTopZ - 0.0018 - 0.0012);   // top lands exactly at bridgeTopZ
-
-      // Wing faces ("Taper" in the drawing): from the centre block each wing's raised face narrows in
-      // straight lines toward the end and drops from 8.4 mm to 6.6 mm high. Height depends only on x,
-      // so the top is a flat plane (no shading facets). Sits on the 5.4 mm wing layer.
-      const F = WING_FACE, m = (v) => v / 1000;
-      const zTop0 = bridgeTopZ, zTop1 = 0.0066, zBase = 0.0045;
-      for (const sx of [1, -1]) {
-        const A = [sx * m(F.x0), m(F.top0)], B = [sx * m(F.x0), m(F.bot0)];
-        const C = [sx * m(F.x1), m(F.bot1)], D = [sx * m(F.x1), m(F.top1)];
-        const v = (p, z) => [p[0], p[1], z];
-        const At = v(A, zTop0), Bt = v(B, zTop0), Ct = v(C, zTop1), Dt = v(D, zTop1);
-        const Ab = v(A, zBase), Bb = v(B, zBase), Cb = v(C, zBase), Db = v(D, zBase);
-        const quads = [[At, Bt, Ct, Dt], [Dt, Ct, Cb, Db], [At, Dt, Db, Ab], [Bt, Bb, Cb, Ct]]; // top, end, neck side, tail side
-        const pos = [], uv = [];
-        for (const [a, b, c, d] of quads) {
-          const tri = sx > 0 ? [a, b, c, a, c, d] : [a, c, b, a, d, c];   // keep outward winding when mirrored
-          for (const p of tri) { pos.push(...p); uv.push(p[0], p[1] + p[2]); }   // grain runs along x like the rest of the bridge
-        }
-        const g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-        g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-        g.computeVertexNormals();
-        mats.bridgeWing ||= Object.assign(mats.bridge.clone(), { side: THREE.DoubleSide });
-        const wing = add(g, mats.bridgeWing);
-        wing.position.set(0, saddleY, 0);
-      }
-    }
-
-    if (belly) {
-      // A1 saddle: 68 mm, compensated (slanted 2.8°, bass end 3.3 mm toward the tail). It sits in the
-      // wood with no dark slot outline; a faint bone-toned step marks the B-string compensation.
-      const ang = Math.atan(SADDLE_SLOPE);
-      const saddle = add(new THREE.BoxGeometry(0.068, 0.0029, 0.006), mats.bone, 'saddle');
-      saddle.rotation.z = ang; saddle.position.set(0, saddleY, bridgeTopZ + 0.0032 - 0.003);
-      const notch = add(new THREE.BoxGeometry(0.003, 0.0011, 0.0006), new THREE.MeshStandardMaterial({ color: '#cfc4ab', roughness: 0.6 }));
-      notch.rotation.z = ang; notch.position.set(0.0145, saddleY + SADDLE_SLOPE * 0.0145 + 0.0009, bridgeTopZ + 0.0032 + 0.0001);
-    } else {
-      const saddle = add(new THREE.BoxGeometry(0.076, 0.0028, 0.006), mats.bone, 'saddle');
-      saddle.position.set(0, saddleY, bridgeTopZ + 0.0032 - 0.003);
-    }
+  if (belly) {
+    // A1: one carved rosewood piece (outline, relief, pin pocket and round-overs: see A1_BRIDGE)
+    mats.bridgeA1 ||= new THREE.MeshStandardMaterial({ map: wood('rosewood', 1, 1), roughness: 0.5 });
+    const b = add(a1BridgeGeometry(), mats.bridgeA1, 'bridge');
+    b.position.set(0, saddleY, 0);
+    // compensated bone saddle: arched crown with the B-string notch (see a1SaddleGeometry)
+    const saddle = add(a1SaddleGeometry(), mats.bone, 'saddle');
+    saddle.position.set(0, saddleY, 0);
+  } else {
+    const w = 0.155, h = 0.028, r = 0.008, s = new THREE.Shape();
+    s.moveTo(-w / 2 + r, -h / 2);
+    s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+    s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
+    s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+    s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+    const b = add(new THREE.ExtrudeGeometry(s, { depth: 0.006, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.0012, bevelSegments: 3, curveSegments: 12 }), mats.bridge, 'bridge');
+    b.position.set(0, saddleY - 0.006, 0.0012);
+    const saddle = add(new THREE.BoxGeometry(0.076, 0.0028, 0.006), mats.bone, 'saddle');
+    saddle.position.set(0, saddleY, bridgeTopZ + 0.0032 - 0.003);
   }
   const saddleTopZ = bridgeTopZ + 0.0032;
-  // pin row: A1 as drawn (straight row, 14.6 mm below the saddle centre)
-  const pinY = belly ? saddleY + CLIFTON_PINS_MM[0].y / 1000 : saddleY - 0.0145;
-  const stringXSaddle = (i) => THREE.MathUtils.lerp(-0.0265, 0.0265, i / 5);
-  const pinX = (i) => (belly ? CLIFTON_PINS_MM[i].x / 1000 : stringXSaddle(i) * 1.02);
-  const pinR = belly ? 0.0029 : 0.0026;   // A1 pin heads ~5.7 mm
+  const pinY = belly ? saddleY + A1_BRIDGE.pins.y / 1000 : saddleY - 0.0145;
+  const pinX = (i) => (belly ? A1_BRIDGE.pins.xs[i] / 1000 : THREE.MathUtils.lerp(-0.0265, 0.0265, i / 5) * 1.02);
+  const stringXSaddle = (i) => (belly ? pinX(i) : THREE.MathUtils.lerp(-0.0265, 0.0265, i / 5));   // A1: strings run straight from pin to saddle
+  const pinR = belly ? A1_BRIDGE.pins.r / 1000 : 0.0026;   // A1 pin heads 6.8 mm
   for (let i = 0; i < 6; i++) {
-    const pin = add(new THREE.CylinderGeometry(pinR, pinR, 0.003, 20), mats.bone);
-    pin.rotation.x = Math.PI / 2; pin.position.set(pinX(i), pinY, bridgeTopZ + 0.0015);
-    if (P.pinDots === false) {   // A1: plain white domed pins (as on the owner's guitar)
-      const dome = add(new THREE.SphereGeometry(pinR, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), mats.pin);
-      dome.rotation.x = Math.PI / 2; dome.position.set(pinX(i), pinY, bridgeTopZ + 0.003);
+    if (P.pinDots === false) {   // A1: large plain white pins — a short collar and a low dome
+      const collar = add(new THREE.CylinderGeometry(pinR, pinR, 0.0012, 32), mats.pin);
+      collar.rotation.x = Math.PI / 2; collar.position.set(pinX(i), pinY, pinTopZ + 0.0006);
+      const dome = add(new THREE.SphereGeometry(pinR, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), mats.pin);
+      dome.rotation.x = Math.PI / 2; dome.scale.set(1, 0.55, 1); dome.position.set(pinX(i), pinY, pinTopZ + 0.0012);
     } else {
+      const pin = add(new THREE.CylinderGeometry(pinR, pinR, 0.003, 20), mats.bone);
+      pin.rotation.x = Math.PI / 2; pin.position.set(pinX(i), pinY, bridgeTopZ + 0.0015);
       const dot = add(new THREE.CircleGeometry(0.0009, 16), mats.purfling);
       dot.position.set(pinX(i), pinY, bridgeTopZ + 0.0031);
     }
@@ -759,107 +938,11 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   const nut = add(new THREE.BoxGeometry(nutW, 0.005, nutTopZ), mats.bone, 'nut');
   nut.position.set(0, nutY + 0.0025, nutTopZ / 2);
 
-  // ---- neck shaft with heel
-  into('neck');
-  mark('neck', parts.neck, -0.02, fretY(12), -0.018);
-  {
-    // One lofted surface: cross-sections from inside the body, along the heel and the C-profile shaft,
-    // past the nut into the back of the headstock. Each section runs θ = 0…π from the treble edge,
-    // under the neck, to the bass edge; the top (z = 0) is closed by the fretboard.
-    const { lerp, clamp, smoothstep } = THREE.MathUtils;
-    // heel, from the owner's side photo: a straight full-depth block (its end face is the heel cap) rises
-    // ~29 mm off the body, then a concave sweep ~53 mm long curves up into the back of the neck
-    const HEEL_BLOCK = 0.0295, HEEL_SWEEP = 0.053, HEEL = HEEL_BLOCK + HEEL_SWEEP;
-    const VOL = 0.034;                          // nut → full headstock-back blend (volute zone)
-    const tan14 = Math.tan(THREE.MathUtils.degToRad(14));
-    const y0 = joinY - 0.012, y1 = nutY + VOL, segY = 140, segA = 36;
-    const pos = [], uv = [], idx = [];
-    // cross-section at y → surface point at angle θ (0 = treble edge, π/2 = underside, π = bass edge)
-    function sectionAt(y) {
-      // C-profile depth: 20.5 mm at the nut, thickening slightly to 22 mm toward the body
-      let zTop = 0;
-      let depth = lerp(0.022, 0.0205, clamp((y - joinY) / (nutY - joinY), 0, 1));
-      let hw = fbHalf(clamp(y, fbEnd, nutY));
-      let taper = 0, q = 1;                     // taper: heel narrows toward the back; q < 1 flattens the bottom
-      // heel: quarter-ellipse sweep (vertical tangent at the neck, horizontal at the block), then the block
-      const w = clamp((joinY + HEEL - y) / HEEL, 0, 1);            // 0 at the top of the heel → 1 at the body
-      if (w > 0) {
-        const u = clamp((joinY + HEEL - y) / HEEL_SWEEP, 0, 1);     // sweep progress; 1 all along the block
-        const sweep = 1 - Math.sqrt(1 - u * u);
-        depth = lerp(depth, DN - 0.0002, sweep);                    // block is flush with the back, like the photo
-        taper = 0.62 * Math.pow(w, 0.85);                           // teardrop / rounded-V from the back
-      }
-      // volute: past the nut, the shaft drops with the angled headstock face and blends into its
-      // flat back with a subtle rounded bump — no boxy step
-      if (y > nutY) {
-        const v = clamp((y - nutY) / VOL, 0, 1), sv = smoothstep(v, 0, 1);
-        zTop = Math.min(0, 0.0035 - Math.max(0, y - nutY - 0.006) * tan14);
-        const headBack = zTop - 0.0145;                             // headstock back plane (14 mm thick)
-        const zBottom = lerp(-depth, headBack, sv) - 0.0028 * Math.sin(Math.PI * v) * (1 - 0.4 * v);
-        depth = zTop - zBottom;
-        hw *= lerp(1, 1.04, sv);
-        q = lerp(1, 0.4, sv);                                       // round C → flat headstock back
-      }
-      return (th) => {
-        const s = Math.sin(th);
-        return [Math.cos(th) * hw * (1 - taper * Math.pow(s, 1.6)), y, zTop - depth * Math.pow(s, q)];
-      };
-    }
-    for (let j = 0; j <= segY; j++) {
-      const y = lerp(y0, y1, j / segY);
-      const at = sectionAt(y);
-      for (let i = 0; i <= segA; i++) {
-        pos.push(...at((i / segA) * Math.PI));
-        uv.push(i / segA, (y - y0) / 0.25);
-      }
-    }
-    for (let j = 0; j < segY; j++) for (let i = 0; i < segA; i++) {
-      const a = j * (segA + 1) + i, b = a + segA + 1;
-      idx.push(a, a + 1, b, b, a + 1, b + 1);   // wound so normals face OUT (was inverted: back of neck vanished)
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-    geo.setIndex(idx); geo.computeVertexNormals();
-    add(geo, mats.neck, 'neck');
-
-    // heel cap: flat cream cap on the end face of the heel block, flush with the back binding
-    const capTop = joinY + HEEL_BLOCK;
-    const cap = new THREE.Shape();
-    cap.moveTo(-0.0055, joinY - 0.003);
-    cap.lineTo(0.0055, joinY - 0.003);
-    cap.lineTo(0.006, capTop - 0.006);
-    cap.quadraticCurveTo(0.0062, capTop, 0, capTop + 0.0005);
-    cap.quadraticCurveTo(-0.0062, capTop, -0.006, capTop - 0.006);
-    cap.lineTo(-0.0055, joinY - 0.003);
-    const capMesh = add(new THREE.ShapeGeometry(cap, 16), mats.heelCap ||= new THREE.MeshStandardMaterial({ color: '#ead9b7', roughness: 0.55, side: THREE.DoubleSide }));
-    capMesh.position.z = -DN - 0.0003;
-
-    // black strap button on the treble (cutaway) side of the heel
-    const sbMat = mats.strapBlack ||= new THREE.MeshStandardMaterial({ color: '#0d0d0e', roughness: 0.35, metalness: 0.2 });
-    // placed exactly on the heel surface, on the treble side, high on the block (~26 mm below the top and
-    // ~26 mm above the body, as in the photo), pointing out along the surface normal
-    const sbY = joinY + 0.026, th = THREE.MathUtils.degToRad(16);
-    const sAt = sectionAt(sbY), p = new THREE.Vector3(...sAt(th));
-    const n = new THREE.Vector3(...sAt(th + 0.02)).sub(new THREE.Vector3(...sAt(th - 0.02)));   // tangent around the section
-    const outward = new THREE.Vector3(n.z, 0, -n.x).normalize();                                // ⟂ tangent, in the section plane
-    if (outward.x < 0) outward.negate();                                                        // treble side faces +x
-    const q2 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), outward);
-    const sbBase = add(new THREE.CylinderGeometry(0.0045, 0.0045, 0.004, 24), sbMat);
-    sbBase.quaternion.copy(q2); sbBase.position.copy(p).addScaledVector(outward, 0.0016);
-    const sbHead = add(new THREE.CylinderGeometry(0.0062, 0.0056, 0.0024, 28), sbMat);
-    sbHead.quaternion.copy(q2); sbHead.position.copy(p).addScaledVector(outward, 0.0046);
-  }
-
-  // ---- headstock (angled back ~14°)
-  const head = new THREE.Group();
-  head.position.set(0, nutY + 0.006, 0.0035);
-  head.rotation.x = -THREE.MathUtils.degToRad(14);
-  parts.headstock.add(head);
-  const tuners = { [-1]: new THREE.Group(), [1]: new THREE.Group() };
-  head.add(tuners[-1], tuners[1]);
-  mark('headstock', head, -0.03, 0.13, 0.001);
-  mark('tuners', tuners[1], 0.066, 0.095, -0.02);
+  // ---- headstock outline + frame. The neck's wood runs on, in one piece, through the volute to the tip
+  // of the headstock (the loft below); the head group further down only carries the face, logo and tuners.
+  const HEAD_TILT = THREE.MathUtils.degToRad(13);      // owner's side render: face and back both lean back ~13°
+  const headT = 0.014;                                 // headstock wood thickness
+  const headY0 = nutY + 0.005, headZ0 = -0.0005;       // the face starts right behind the nut, ~0.5 mm under the neck top
   const headShape = new THREE.Shape();
   let headTop, headHalf, postYs, logoY;
   if (P.headstock === 'a1') {
@@ -868,26 +951,240 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     // To change the shape, paste the new path `d` here.
     applySvgPath(headShape, A1_HEADSTOCK_PATH, { cx: 50, nutY: 165 });
     headTop = (165 - 12.72) / 1000; logoY = 0.086; postYs = [0.061, 0.094, 0.127];
-    headHalf = halfWidthFromShape(headShape);
   } else {
     headTop = 0.193; logoY = 0.162; postYs = [0.05, 0.095, 0.14];
-    headHalf = (y) => THREE.MathUtils.lerp(0.025, 0.0415, THREE.MathUtils.clamp(y / 0.165, 0, 1));
     headShape.moveTo(-0.025, 0); headShape.lineTo(0.025, 0);
     headShape.lineTo(0.0415, 0.165); headShape.quadraticCurveTo(0.043, 0.184, 0.036, 0.186);
     headShape.quadraticCurveTo(0, 0.193, -0.036, 0.186);
     headShape.quadraticCurveTo(-0.043, 0.184, -0.0415, 0.165); headShape.closePath();
   }
-  // A1: no bevel (a bevel pushes the light neck wood out past the veneer as a tan border) and dark
-  // side edges, so the rosewood face runs cleanly to the edge; the back stays natural neck wood.
-  const a1Head = P.headstock === 'a1';
-  const headT = 0.014, bev = a1Head ? 0 : 0.0015;
-  const headGeo = new THREE.ExtrudeGeometry(headShape, a1Head
-    ? { depth: headT, bevelEnabled: false, curveSegments: 24 }
-    : { depth: headT, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 20 });
-  const headEdge = new THREE.MeshStandardMaterial({ map: wood('rosewoodFace', 1 / 0.05, 1 / 0.16), roughness: 0.65 });
-  const hs = new THREE.Mesh(headGeo, a1Head ? [mats.neck, headEdge] : mats.neck); // groups: 0 = faces, 1 = sides
-  hs.position.z = -(headT + bev);
-  head.add(hs);
+  headHalf = halfWidthTable(headShape, headTop);
+
+  // ---- neck shaft with heel, volute and the headstock's wood
+  into('neck');
+  mark('neck', parts.neck, -0.02, fretY(12), -0.018);
+  {
+    // One welded lofted surface: polar rotating-plane heel (phi = π/2 on the back plane → phi = 0 on the
+    // neck shaft), seamlessly continuing into the C-profile shaft, volute, and headstock wood.
+    const { lerp, clamp, smoothstep } = THREE.MathUtils;
+    const smin = (a, b, k) => { const h = clamp(0.5 + 0.5 * (b - a) / k, 0, 1); return lerp(b, a, h) - k * h * (1 - h); };
+    const smax = (a, b, k) => { const h = clamp(0.5 + 0.5 * (a - b) / k, 0, 1); return lerp(b, a, h) + k * h * (1 - h); };
+
+    // Polar heel parameters (all in metres; tweak these 4 numbers if you want to fine-tune the silhouette):
+    const HEEL_CAP = 0.042;     // height of the pointed heel cap tip above joinY (42 mm)
+    const HEEL_TOP = 0.106;     // where the concave heel begins flaring from the straight C-neck (106 mm)
+    const CAP_HALF = 0.0115;    // half-width of the heel cap base at the body joint (23 mm full width)
+    const HEEL_MS = 2.2;        // spine scoop tightness (2.0 = pure ellipse, higher = tighter L-bend)
+    const HEEL_BASE = -0.005;   // tucks 5 mm inside the rim so curved body shoulders never leave a gap
+
+    const heelD0 = neckDepthAt(joinY + HEEL_TOP);
+    const heelRt = HEEL_TOP - HEEL_CAP;
+    const heelRd = DN - heelD0;
+
+    // Surface point on the polar heel at sweep angle phi ∈ [0, π/2] and section angle th ∈ [0, π]:
+    //  • phi = 0:   horizontal plane at y = joinY + HEEL_TOP, exact neck C-profile (0 mm seam)
+    //  • phi = π/2: vertical back plane at z = -DN, exact pointed gothic-arch heel cap perimeter
+    function heelPoint(phi, th) {
+      const u = phi / (Math.PI / 2);
+      const cp = Math.cos(phi), sp = Math.sin(phi);
+
+      // Concave spine curve (quarter superellipse centered at (t = HEEL_TOP, d = DN))
+      const rSpine = 1 / Math.pow(Math.pow(sp / heelRt, HEEL_MS) + Math.pow(cp / heelRd, HEEL_MS), 1 / HEEL_MS);
+
+      // L-boundary ({d = 0} fretboard edge U {t = HEEL_BASE} body joint) + smooth interior blend to prevent diagonal crease
+      const rFb = cp > 1e-7 ? DN / cp : 1e6;
+      const rBody = sp > 1e-7 ? (HEEL_TOP - HEEL_BASE) / sp : 1e6;
+      const rL = Math.min(rFb, rBody);
+      const rSm = smin(rFb, rBody, 0.036);
+
+      // Cross-section morph: pure round C-profile near the neck (u ≤ 0.30) → pointed gothic arch at heel cap (u = 1)
+      const kArch = smoothstep(u, 0.30, 1.0);
+      const cArch = 0.75 * Math.pow(kArch, 1.6);
+      const Ra = 1 + cArch, h0 = Math.sqrt(Ra * Ra - cArch * cArch);
+
+      const ca = Math.cos(th), ax = Math.abs(ca);
+      const h = Math.sqrt(Math.max(0, Ra * Ra - (ax + cArch) * (ax + cArch))) / h0;
+
+      const rBase = lerp(rL, rSm, smoothstep(h, 0.0, 0.30));
+      const r = lerp(rBase, rSpine, h);
+      const tPt = HEEL_TOP - r * sp;
+      const dPt = DN - r * cp;
+
+      // Smooth width taper starting at d = heelD0 (guarantees exact C1 match with the neck shaft at phi = 0)
+      const taper = Math.pow(smoothstep(dPt, heelD0, DN), 1.15);
+      const wPt = lerp(fbHalf(clamp(joinY + tPt, fbEnd, nutY)), CAP_HALF, taper);
+      return [wPt * ca, joinY + tPt, -dPt];
+    }
+
+    const sinA = Math.sin(HEAD_TILT), cosA = Math.cos(HEAD_TILT), tanA = Math.tan(HEAD_TILT);
+    const VOL_START = -0.016, VOL_RISE = 0.0025;
+
+    // Cross-section for the straight neck shaft, volute, and headstock wood (y >= joinY + HEEL_TOP)
+    function sectionAt(y) {
+      const depth = neckDepthAt(y);
+      const hw = fbHalf(clamp(y, fbEnd, nutY));
+      const u = y - headY0;                                         // distance past the nut (headstock side +)
+      if (u <= VOL_START) {
+        return (th) => [Math.cos(th) * hw, y, -depth * Math.sin(th)];   // the neck's C profile
+      }
+      const zTop = u < 0 ? 0 : headZ0 - u * tanA;
+      const round = Math.min(0.12, depth + VOL_RISE * smoothstep(u, VOL_START, 0) + (u > 0 ? 110 * u * u : 0));
+      const pad = smax(depth + VOL_RISE - 0.0003 * smoothstep(u, 0, 0.01), -(headZ0 - u * tanA) + headT / cosA, 0.003);
+      const zLim = headZ0 + (u * cosA - headTop) / sinA;
+      return (th) => {
+        const c = Math.cos(th), s = Math.sin(th);
+        let z = -smin(round * s, pad, 0.0015);
+        z = Math.max(Math.min(z, zTop), zLim);
+        const W = u < 0 ? hw : headHalf(u * cosA - (z - headZ0) * sinA);
+        return [W * c, y, z];
+      };
+    }
+
+    // Build rows: polar heel (phi = π/2 → >0), then straight shaft, volute, and headstock wood (yH → yTip)
+    const y0 = joinY + HEEL_BASE, yH = joinY + HEEL_TOP, yA = headY0 + VOL_START - 0.004, yTip = headY0 + headTop * cosA;
+    const segA = 64, N = 400;
+    const pos = [], uv = [], idx = [];
+    const tr = new Float64Array((N + 1) * 3), len = new Float64Array(N + 1), wl = new Float64Array(N + 1);
+    let rowCount = 0;
+
+    function pushRow(at) {
+      for (let k = 0; k <= N; k++) {
+        const q = at((k / N) * Math.PI);
+        tr[k * 3] = q[0]; tr[k * 3 + 1] = q[1]; tr[k * 3 + 2] = q[2];
+        if (!k) { len[0] = wl[0] = 0; continue; }
+        const dx = Math.abs(q[0] - tr[k * 3 - 3]);
+        const dy = q[1] - tr[k * 3 - 2];
+        const dz = q[2] - tr[k * 3 - 1];
+        const dl = Math.hypot(dx, dy, dz);
+        len[k] = len[k - 1] + dl;
+        wl[k] = wl[k - 1] + dl + 2 * dx;
+      }
+      const S = len[N], WS = wl[N];
+      for (let i = 0, k = 0; i <= segA; i++) {
+        const ws = (WS * i) / segA;
+        while (k < N - 1 && wl[k + 1] < ws) k++;
+        const t = wl[k + 1] > wl[k] ? (ws - wl[k]) / (wl[k + 1] - wl[k]) : 0;
+        const px = lerp(tr[k * 3], tr[k * 3 + 3], t);
+        const py = lerp(tr[k * 3 + 1], tr[k * 3 + 4], t);
+        const pz = lerp(tr[k * 3 + 2], tr[k * 3 + 5], t);
+        pos.push(px, py, pz);
+        uv.push((lerp(len[k], len[k + 1], t) - S / 2) / 0.06 + 0.5, (py - y0) / 0.25);
+      }
+      rowCount++;
+    }
+
+    // 1. Polar heel rows (phi from π/2 at the flat back plane up toward 0 at the neck shaft)
+    const nHeel = 64;
+    for (let j = 0; j < nHeel; j++) {
+      const phi = (Math.PI / 2) * (1 - j / nHeel);
+      pushRow((th) => heelPoint(phi, th));
+    }
+
+    // 2. Straight shaft, volute, and headstock rows starting cleanly at y = yH (matches phi = 0 exactly)
+    const ys = [];
+    const nShaft = Math.ceil((yA - yH) / 0.0025);
+    for (let j = 0; j < nShaft; j++) ys.push(lerp(yH, yA, j / nShaft));
+    for (let y = yA; y < yTip;) {
+      ys.push(y);
+      const u = y - headY0;
+      y += u < 0.045 ? 0.0006 : u > headTop * cosA - 0.014 ? 0.0005 : 0.001;
+    }
+    ys.push(yTip);
+    for (const y of ys) pushRow(sectionAt(y));
+
+    for (let j = 0; j < rowCount - 1; j++) for (let i = 0; i < segA; i++) {
+      const a = j * (segA + 1) + i, b = a + segA + 1;
+      idx.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    add(geo, mats.neck, 'neck');
+
+    // Heel cap: exact pointed gothic arch matching the phi = π/2 boundary, flat on z = -DN,
+    // clipped cleanly at y = joinY so it never z-fights over the guitar back
+    const cap = new THREE.Shape(), CN = 96;
+    const rawCap = [];
+    for (let k = 0; k <= CN; k++) rawCap.push(heelPoint(Math.PI / 2, (k / CN) * Math.PI));
+    const capPts = [];
+    for (let k = 0; k < rawCap.length; k++) {
+      const p = rawCap[k];
+      if (k > 0 && (rawCap[k - 1][1] < joinY) !== (p[1] < joinY)) {
+        const a = rawCap[k - 1], f = (joinY - a[1]) / (p[1] - a[1]);
+        capPts.push([lerp(a[0], p[0], f), joinY]);
+      }
+      if (p[1] >= joinY) capPts.push([p[0], p[1]]);
+    }
+    cap.moveTo(capPts[0][0], capPts[0][1]);
+    for (let k = 1; k < capPts.length; k++) cap.lineTo(capPts[k][0], capPts[k][1]);
+    cap.closePath();
+
+    const capGeo = new THREE.ShapeGeometry(cap);
+    {
+      const cp = capGeo.attributes.position, cuv = capGeo.attributes.uv, cn = capGeo.attributes.normal;
+      for (let i = 0; i < cp.count; i++) {
+        cp.setZ(i, -DN);
+        cuv.setXY(i, cp.getX(i) / 0.06 + 0.5, (cp.getY(i) - y0) / 0.25);
+        cn.setXYZ(i, 0, 0, -1);
+      }
+      const ci = capGeo.index.array;                              // flip winding so the face points −z
+      for (let i = 0; i < ci.length; i += 3) { const tmp = ci[i + 1]; ci[i + 1] = ci[i + 2]; ci[i + 2] = tmp; }
+    }
+    mats.heelCapA1 ||= Object.assign(mats.neck.clone(), { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+    add(capGeo, mats.heelCapA1);
+
+    // Black strap button on the treble (cutaway) side of the heel, seated flush on the polar heel wall
+    const sbMat = mats.strapBlack ||= new THREE.MeshStandardMaterial({ color: '#0d0d0e', roughness: 0.35, metalness: 0.2 });
+    const targetY = joinY + 0.030, targetZ = -0.025;
+    let bestD = Infinity, sbPhi = 0.7, sbTh = 0.3;
+    for (let jp = 1; jp < 90; jp++) {
+      const phi = (Math.PI / 2) * (jp / 90);
+      for (let jt = 1; jt < 60; jt++) {
+        const th = (Math.PI / 2) * (jt / 60);
+        const q = heelPoint(phi, th);
+        const d2 = (q[1] - targetY) ** 2 + (q[2] - targetZ) ** 2;
+        if (d2 < bestD) { bestD = d2; sbPhi = phi; sbTh = th; }
+      }
+    }
+    const p = new THREE.Vector3(...heelPoint(sbPhi, sbTh));
+    const eps = 1e-4;
+    const dTh = new THREE.Vector3(...heelPoint(sbPhi, sbTh + eps)).sub(new THREE.Vector3(...heelPoint(sbPhi, sbTh - eps)));
+    const dPhiUp = new THREE.Vector3(...heelPoint(sbPhi - eps, sbTh)).sub(new THREE.Vector3(...heelPoint(sbPhi + eps, sbTh)));
+    const outward = new THREE.Vector3().crossVectors(dTh, dPhiUp).normalize();
+    if (outward.x < 0) outward.negate();
+    const q2 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), outward);
+    const qz = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), outward);
+    const at = (o) => p.clone().addScaledVector(outward, o);
+
+    const sbBase = add(new THREE.CylinderGeometry(0.0036, 0.0036, 0.0031, 28), sbMat);
+    sbBase.quaternion.copy(q2); sbBase.position.copy(at(0.00105));
+    const sbHead = add(new THREE.CylinderGeometry(0.005, 0.0045, 0.0019, 32), sbMat);
+    sbHead.quaternion.copy(q2); sbHead.position.copy(at(0.00355));
+    const bore = add(new THREE.CircleGeometry(0.0015, 24), mats.holeDark ||= new THREE.MeshBasicMaterial({ color: '#060403' }));
+    bore.quaternion.copy(qz); bore.position.copy(at(0.00451));
+    const screwMat = mats.strapScrew ||= new THREE.MeshStandardMaterial({ color: '#2a2a2c', metalness: 0.7, roughness: 0.4 });
+    const screw = add(new THREE.CircleGeometry(0.00105, 24), screwMat);
+    screw.quaternion.copy(qz); screw.position.copy(at(0.00453));
+    for (const ang of [0, Math.PI / 2]) {
+      const slot = add(new THREE.PlaneGeometry(0.0017, 0.00028), mats.holeDark);
+      slot.quaternion.copy(qz).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ang + Math.PI / 4));
+      slot.position.copy(at(0.00455));
+    }
+  }
+
+  // ---- headstock face, logo and tuners (the wood itself is the end of the neck loft above).
+  // Head-local frame: origin at the face, right behind the nut; +y up the headstock, +z out of the face.
+  const head = new THREE.Group();
+  head.position.set(0, headY0, headZ0);
+  head.rotation.x = -HEAD_TILT;
+  parts.headstock.add(head);
+  const tuners = { [-1]: new THREE.Group(), [1]: new THREE.Group() };
+  head.add(tuners[-1], tuners[1]);
+  mark('headstock', head, -0.03, 0.13, 0.001);
+  mark('tuners', tuners[1], 0.066, 0.095, -0.02);
   mats.veneer.specularIntensity = 0.25;
   mats.veneer.userData.envScale = 0.15; // main.js applies a reduced environment reflection
   if (P.headFace) {
@@ -908,33 +1205,123 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   }
   logoMesh.position.set(0, logoY, 0.0006); head.add(logoMesh);
 
-  // tuners: posts on the face, housings on the back, buttons out the sides
+// tuners: posts on the face, housings on the back, buttons out the sides
   const posts = []; // [side][k] local positions
-  const backZ = -(headT + 2 * bev);
+  const backZ = -headT;                    // the headstock's flat back
   const tm = mats.tuner;
+  const a1h = P.headstock === 'a1';
+  // A1: 3+3 enclosed die-cast tuners in MATTE BLACK — semicircular gear drum + horizontal top worm-gear barrel,
+  // bevelled circular back medallion with recessed seam groove, stout upper shaft sleeve, and full D-shaped button.
+  const HOUSE_D = 0.0092, SHAFT_Y = 0.0045, shaftZ = backZ - 0.0046, zBackFace = backZ - HOUSE_D;
+  const a1Geo = a1h && {
+    // Semicircular bottom gear drum (R 7.4 mm) + flat-topped upper worm-gear housing (front face flush on z = 0)
+    housing: (() => {
+      const R = 0.0074 - 0.0008, yTop = 0.0082 - 0.0008, rc = 0.0012;   // 0.8 mm comes back with bevelSize
+      const s = new THREE.Shape();
+      s.absarc(0, 0, R, Math.PI, Math.PI * 2, false);                   // full semicircular bottom drum
+      s.lineTo(R, yTop - rc); s.absarc(R - rc, yTop - rc, rc, 0, Math.PI / 2, false);
+      s.lineTo(-R + rc, yTop); s.absarc(-R + rc, yTop - rc, rc, Math.PI / 2, Math.PI, false);
+      s.closePath();
+      const g = new THREE.ExtrudeGeometry(s, {
+        depth: HOUSE_D - 0.0018, bevelEnabled: true, bevelThickness: 0.0009, bevelSize: 0.0008, bevelSegments: 4, curveSegments: 28,
+      });
+      g.translate(0, 0, -(HOUSE_D - 0.0009));                           // spans z ∈ [-HOUSE_D, 0]
+      return g;
+    })(),
+    // Horizontal cylindrical worm-gear ridge blended across the top of the housing
+    wormBarrel: new THREE.CylinderGeometry(0.0033, 0.0033, 0.0144, 24),
+    // Raised circular drum bezel + recessed groove + subtly crowned back medallion (rotates +Y → -Z)
+    cap: new THREE.LatheGeometry([
+      [0.0073, 0.0000], [0.0073, 0.0005], [0.0068, 0.0010], [0.0061, 0.0010],
+      [0.0059, 0.0003], [0.0056, 0.0003], [0.0054, 0.0011], [0.0050, 0.0013],
+      [0.0025, 0.0014], [0.0000, 0.00145],
+    ].map(([r, y]) => new THREE.Vector2(r, y)), 44),
+    // Dark shadow ring seated in the circular groove so the cap seam stays crisp in matte black
+    capGroove: new THREE.RingGeometry(0.00545, 0.00605, 44),
+    tab: (() => {   // teardrop mounting tab: round screw lug joined to the gear drum's lower-inner tangent
+      const s = new THREE.Shape();
+      s.moveTo(-0.0029, 0.0032); s.lineTo(0.0029, 0.0032);
+      s.lineTo(0.0023, -0.0040); s.absarc(0, -0.0046, 0.0025, -0.15 * Math.PI, 1.15 * Math.PI, true);
+      s.lineTo(-0.0029, 0.0032);
+      return new THREE.ExtrudeGeometry(s, { depth: 0.0012, bevelEnabled: true, bevelThickness: 0.0003, bevelSize: 0.0003, bevelSegments: 2, curveSegments: 16 });
+    })(),
+    screw: new THREE.SphereGeometry(0.0016, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    slot: new THREE.BoxGeometry(0.0022, 0.00042, 0.0004),
+    sleeve: new THREE.CylinderGeometry(0.0029, 0.0029, 1, 24),          // stout upper shaft sleeve
+    collar: new THREE.CylinderGeometry(0.00245, 0.00245, 0.0015, 22),   // slim washer/collar before button
+    button: (() => {   // full half-moon / D-shaped button: flatter inner face (x = 0), generous rounded outer dome
+      const s = new THREE.Shape();
+      for (let i = 0; i <= 36; i++) {
+        const a = -Math.PI / 2 + (i / 36) * Math.PI;
+        const x = 0.0015 + 0.0098 * Math.pow(Math.max(0, Math.cos(a)), 0.88);
+        const y = 0.0080 * Math.sin(a);
+        i === 0 ? s.moveTo(x, y) : s.lineTo(x, y);
+      }
+      for (let i = 1; i <= 18; i++) {
+        const a = Math.PI / 2 - (i / 18) * Math.PI;
+        const x = 0.0015 - 0.0015 * Math.pow(Math.max(0, Math.cos(a)), 0.45);
+        const y = 0.0080 * Math.sin(a);
+        s.lineTo(x, y);
+      }
+      s.closePath();
+      const g = new THREE.ExtrudeGeometry(s, {
+        depth: 0.0024, bevelEnabled: true, bevelThickness: 0.0014, bevelSize: 0.0009, bevelSegments: 5, curveSegments: 24,
+      });
+      g.translate(0, 0, -0.0012);
+      return g;
+    })(),
+  };
+  const collarMat = a1h && (mats.tunerCollar ||= Object.assign(
+    new THREE.MeshStandardMaterial({ color: '#6b6b70', metalness: 0.75, roughness: 0.42 }), { userData: { envScale: 0.9 } }));
+  const screwSlotMat = a1h && (mats.screwSlot ||= new THREE.MeshBasicMaterial({ color: '#050505' }));
   for (const side of [-1, 1]) {
     posts[side] = [];
     postYs.forEach((py) => {
       const hw = headHalf(py);
-      const a1h = P.headstock === 'a1';
       const x = side * (hw - (a1h ? 0.0125 : 0.0115));
-      const bush = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0052, 0.0022, 24), tm);
       const T = tuners[side];
+      const bush = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0052, 0.0022, 24), tm);
       bush.rotation.x = Math.PI / 2; bush.position.set(x, py, 0.0011); T.add(bush);
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.012, 20), tm);
       post.rotation.x = Math.PI / 2; post.position.set(x, py, 0.006); T.add(post);
-      // A1: sealed housings (and their shafts) on the back are polished chrome; posts/buttons stay black
-      // brighter env reflection so it reads as polished silver on the black stage
-      const hm = a1h ? (mats.chromeBright ||= Object.assign(
-        new THREE.MeshStandardMaterial({ color: '#f4f4f6', metalness: 1, roughness: 0.14 }),
-        { userData: { envScale: 2.4 } })) : tm;
-      const housing = new THREE.Mesh(new RoundedBoxGeometryLite(0.013, 0.019, 0.009, 0.002), hm);
-      housing.position.set(x, py, backZ - 0.0045); T.add(housing);
-      // A1 (photo): buttons sit right against the headstock edge, on short shafts
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.0016, 0.0016, a1h ? 0.012 : 0.018, 12), hm);
-      shaft.rotation.z = Math.PI / 2; shaft.position.set(side * (hw + (a1h ? 0.0005 : 0.004)), py, backZ - 0.0045); T.add(shaft);
-      const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.0045, 32), tm);
-      btn.scale.set(1.1, 1, 0.8); btn.position.set(side * (hw + (a1h ? 0.0125 : 0.02)), py, backZ - 0.0045); T.add(btn);
+      if (a1h) {
+        const G = a1Geo;
+        const housing = new THREE.Mesh(G.housing, tm);
+        housing.position.set(x, py, backZ); T.add(housing);
+        const worm = new THREE.Mesh(G.wormBarrel, tm);
+        worm.rotation.z = Math.PI / 2; worm.position.set(x, py + SHAFT_Y, shaftZ); T.add(worm);
+        // Circular back medallion + groove centered on the lower gear drum
+        const capY = py - 0.0003;
+        const cap = new THREE.Mesh(G.cap, tm);
+        cap.rotation.x = -Math.PI / 2; cap.position.set(x, capY, zBackFace); T.add(cap);
+        const groove = new THREE.Mesh(G.capGroove, screwSlotMat);
+        groove.rotation.y = Math.PI; groove.position.set(x, capY, zBackFace - 0.00035); T.add(groove);
+        // Teardrop mounting tab at the lower-inner tangent of the circular gear drum
+        const tab = new THREE.Group();
+        tab.position.set(x - side * 0.0050, py - 0.0052, backZ);
+        tab.rotation.z = -side * 0.78; T.add(tab);
+        const plate = new THREE.Mesh(G.tab, tm); plate.position.z = -0.0015; tab.add(plate);
+        const screw = new THREE.Mesh(G.screw, tm); screw.rotation.x = -Math.PI / 2; screw.position.set(0, -0.0046, -0.0018); tab.add(screw);
+        const slotA = new THREE.Mesh(G.slot, screwSlotMat); slotA.position.set(0, -0.0046, -0.0034); tab.add(slotA);
+        const slotB = slotA.clone(); slotB.rotation.z = Math.PI / 2; tab.add(slotB);
+        // Stout shaft sleeve, washer collar, and D-shaped button aligned with the top worm-gear barrel
+        const sy = py + SHAFT_Y;
+        const sleeveStart = x + side * 0.0068, sleeveEnd = side * (hw + 0.0038), btnX = side * (hw + 0.0053);
+        const sleeve = new THREE.Mesh(G.sleeve, tm);
+        sleeve.scale.y = Math.abs(sleeveEnd - sleeveStart);
+        sleeve.rotation.z = Math.PI / 2; sleeve.position.set((sleeveStart + sleeveEnd) / 2, sy, shaftZ); T.add(sleeve);
+        const collar = new THREE.Mesh(G.collar, collarMat);
+        collar.rotation.z = Math.PI / 2; collar.position.set((sleeveEnd + btnX) / 2, sy, shaftZ); T.add(collar);
+        const btn = new THREE.Mesh(G.button, tm);
+        btn.scale.x = side; btn.position.set(btnX, sy, shaftZ); T.add(btn);
+      } else {
+        const housing = new THREE.Mesh(new RoundedBoxGeometryLite(0.013, 0.019, 0.009, 0.002), tm);
+        housing.position.set(x, py, backZ - 0.0045); T.add(housing);
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.018, 12), tm);
+        shaft.rotation.z = Math.PI / 2; shaft.position.set(side * (hw + 0.004), py, backZ - 0.0045); T.add(shaft);
+        const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.0045, 32), tm);
+        btn.scale.set(1.1, 1, 0.8); btn.position.set(side * (hw + 0.02), py, backZ - 0.0045); T.add(btn);
+      }
       posts[side].push(new THREE.Vector3(x - side * 0.0032, py, 0.007));
     });
   }
@@ -946,8 +1333,10 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   for (let i = 0; i < 6; i++) {
     const mat = i < 4 ? mats.bronze : mats.steel;
     const xs = stringXSaddle(i), xn = THREE.MathUtils.lerp(-0.0178, 0.0178, i / 5);
-    const pin = new THREE.Vector3(pinX(i), pinY, bridgeTopZ + 0.002);   // string anchors at its bridge pin
-    const sad = new THREE.Vector3(xs, saddleY + SADDLE_SLOPE * xs, saddleTopZ + radii[i]); // breaks over the slanted saddle
+    // string anchors at its bridge pin (A1: it leaves the pin's front, low on the dome, inside the pocket)
+    const pin = belly ? new THREE.Vector3(pinX(i), pinY + pinR * 0.45, pinTopZ + 0.0016) : new THREE.Vector3(pinX(i), pinY, bridgeTopZ + 0.002);
+    const sc = belly ? a1SaddleContact(xs) : { y: 0, z: saddleTopZ };   // seats on the arched crown / B notch
+    const sad = new THREE.Vector3(xs, saddleY + sc.y, sc.z + radii[i]);
     const nt = new THREE.Vector3(xn, nutY + 0.0025, nutTopZ + radii[i]);
     const post = head.localToWorld(postFor[i].clone());
     group.worldToLocal(post);
@@ -965,7 +1354,7 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     strap: [[0, -0.08, 0], 0.26],
     fretboard: [[0, 0.13, 0.075], 0.24],
     neck: [[0, 0.13, 0], 0.3],
-    headstock: [[0, 0.22, -0.01], 0.36],
+    headstock: [[0, 0.13, 0], 0.3],     // the headstock is the end of the one-piece neck: they travel together
   };
   const SPREAD = 0.55; // each part's own move takes this fraction of the timeline
   const easeIO = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
@@ -1001,7 +1390,8 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     mats.top.map = topCache[f.top];
     mats.body.map = wood(f.body, 1 / 0.12, 1 / 0.25);
     mats.neck.map = wood(f.neck, 1, 3);
-    [mats.top, mats.body, mats.neck].forEach((m) => { m.color.set('#ffffff'); m.needsUpdate = true; });
+    if (mats.heelCapA1) mats.heelCapA1.map = mats.neck.map;          // the heel cap is the neck's wood too
+    [mats.top, mats.body, mats.neck, mats.heelCapA1].filter(Boolean).forEach((m) => { m.color.set('#ffffff'); m.needsUpdate = true; });
   }
   setFinish(finish);
 
@@ -1011,12 +1401,12 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
   const hotspots = {
     top: { pos: new THREE.Vector3(-0.11, 0.17, 0.001), normal: new THREE.Vector3(0, 0, 1) },
     rosette: { pos: new THREE.Vector3(-0.043, SH.y + 0.043, 0.001), normal: new THREE.Vector3(0, 0, 1) },
-    bridge: { pos: new THREE.Vector3(0.065, saddleY - 0.006, bridgeTopZ), normal: new THREE.Vector3(0, 0, 1) },
+    bridge: { pos: new THREE.Vector3(0.065, saddleY - 0.006, belly ? 0.0056 : bridgeTopZ), normal: new THREE.Vector3(0, 0, 1) },
     fretboard: { pos: new THREE.Vector3(0, (fretY(5) + fretY(4)) / 2, fbT + 0.001), normal: new THREE.Vector3(0, 0, 1) },
     headstock: { pos: headPoint(0, headTop * 0.6, 0.001), normal: headNormal(0, 0, 1) },
     tuners: { pos: headPoint(headHalf(postYs[1]) + 0.026, postYs[1], backZ - 0.0045), normal: new THREE.Vector3(1, 0, 0.2).normalize() },
     back: { pos: new THREE.Vector3(0.06, 0.2, -depthAt(0.2) - 0.001), normal: new THREE.Vector3(0, 0, -1) },
-    neck: { pos: new THREE.Vector3(0, fretY(7), -0.022), normal: new THREE.Vector3(0, 0, -1) },
+    neck: { pos: new THREE.Vector3(0, fretY(7), -neckDepthAt(fretY(7)) - 0.0015), normal: new THREE.Vector3(0, 0, -1) },
   };
 
   const height = head.localToWorld(new THREE.Vector3(0, headTop, 0)).y;

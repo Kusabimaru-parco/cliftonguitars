@@ -11,9 +11,9 @@ export const DEFAULT_BUILD = {
 
 // lineup card entry (home + guitars pages): rendered with the default build, links to the customizer
 export const ELECTRIC_CARD = {
-  id: 'custom-electric', kind: 'electric', build: DEFAULT_BUILD, href: 'customize.html',
-  name: 'Custom Electric', series: 'Custom Shop',
-  tagline: 'Telecaster or Stratocaster. Choose the body, neck, pickguard and pickups.',
+  id: 'custom-electric', kind: 'electric', build: DEFAULT_BUILD, href: 'customs.html',
+  name: 'Clifton Customs', series: 'Custom Shop',
+  tagline: 'Built by us, designed by you. A Telecaster or Stratocaster with your body, neck, pickguard and pickups.',
   alt: 'Custom Telecaster in butterscotch with a vintage white pickguard', cta: 'Build yours',
 };
 

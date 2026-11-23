@@ -370,7 +370,14 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   const b = normalizeBuild(buildIn);
   const shapeId = b.body, S = SHAPES[shapeId], strat = shapeId === 'strat';
   const group = new THREE.Group(); group.name = 'electric';
-  const add = (geo, mat, parent = group) => { const m = new THREE.Mesh(geo, mat); parent.add(m); return m; };
+  // every mesh goes into a named part group, so the start page can pull the guitar apart (setExplode)
+  const parts = {};
+  let part = group;
+  const into = (name) => {
+    if (!parts[name]) { parts[name] = new THREE.Group(); parts[name].name = `part:${name}`; group.add(parts[name]); }
+    part = parts[name];
+  };
+  const add = (geo, mat, parent = part) => { const m = new THREE.Mesh(geo, mat); parent.add(m); return m; };
 
   const saddleY = mm(S.saddle), nutY = saddleY + SCALE;
   const fretY = (n) => nutY - SCALE * (1 - Math.pow(2, -n / 12));
@@ -394,6 +401,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
     : new THREE.MeshStandardMaterial({ map: cached('rose', () => canvasTexture(256, 1024, (g, w, h) => grain(g, w, h, { base: '#46322f', dark: '#1d110d', light: '#644740', lines: 160, wobble: 5, alpha: 0.5, seed: 5 }))), roughness: 0.7 });
 
   // ---- body: traced outline, rounded edge (the bevel is grown inward so the silhouette stays exact)
+  into('body');
   const outline = outlineFrom(S.outline, 360);
   const [bevT, bevS] = S.bevel;
   const body = add(new THREE.ExtrudeGeometry(new THREE.Shape(offsetInward(outline, bevS)), { depth: BODY_T - 2 * bevT, bevelEnabled: true, bevelThickness: bevT, bevelSize: bevS, bevelSegments: 6, curveSegments: 64 }),
@@ -401,6 +409,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   body.position.z = -(BODY_T - bevT);
 
   // ---- pickguard (3-ply) + screws
+  into('pickguard');
   const guardId = strat ? b.spg : (b.tpg === 'hb' ? 'hb' : 'sc');
   const guardColour = strat ? b.spgc : b.tpgc;
   const pgTopZ = 0.0025;
@@ -417,11 +426,12 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- pickups
+  into('pickups');
   const cream = new THREE.MeshPhysicalMaterial({ color: '#ebe2cd', roughness: 0.35, clearcoat: 0.5 });
   const blackPlastic = new THREE.MeshPhysicalMaterial({ color: '#0e0e10', roughness: 0.4, clearcoat: 0.3 });
   const steel = new THREE.MeshStandardMaterial({ color: '#8d8a84', metalness: 1, roughness: 0.3 }); steel.userData.envScale = 1.2;
   const stringX = (i, spread) => lerp(-spread / 2, spread / 2, i / 5);
-  const place = (g, y, slantDeg = 0) => { g.position.y = y; g.rotation.z = deg(slantDeg); group.add(g); return g; };
+  const place = (g, y, slantDeg = 0) => { g.position.y = y; g.rotation.z = deg(slantDeg); part.add(g); return g; };
   const cavity = (w, h, y, slantDeg = 0, base = pgTopZ) => { const g = new THREE.Group(); const c = add(new THREE.ShapeGeometry(rr(w, h, Math.min(w, h) / 2.2)), dark, g); c.position.z = base + 0.0001; return place(g, y, slantDeg); };
   const poles = (g, look, z, spread, rowY = 0) => {
     if (look === 'rail') {
@@ -490,6 +500,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- bridge + saddles
+  into('bridge');
   const saddleTop = [];
   let anchorY;
   if (strat) {
@@ -531,6 +542,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- controls
+  into('controls');
   if (strat) {
     const knobCol = { vw: '#ece1c6', white: '#f6f5f2', black: '#151515', tort: '#ece1c6' }[guardColour];
     const knobPlastic = new THREE.MeshPhysicalMaterial({ color: knobCol, roughness: 0.35, clearcoat: 0.6 });
@@ -567,6 +579,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- strap buttons
+  into('hardware');
   const strap = (x, y, z, dir) => {
     const s = add(new THREE.CylinderGeometry(0.0042, 0.0055, 0.009, 18), hw);
     s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); s.position.set(x, y, z);
@@ -583,6 +596,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- fretboard, frets, dots, nut
+  into('fretboard');
   const fbShape = new THREE.Shape([new THREE.Vector2(-fbHalf(fbEnd), fbEnd), new THREE.Vector2(fbHalf(fbEnd), fbEnd), new THREE.Vector2(fbHalf(nutY), nutY), new THREE.Vector2(-fbHalf(nutY), nutY)]);
   add(new THREE.ExtrudeGeometry(fbShape, { depth: FB_T, bevelEnabled: false }), fbMat).position.z = FB_BOT;
   const fretMat = new THREE.MeshStandardMaterial({ color: '#dcdad4', metalness: 1, roughness: 0.2 });
@@ -601,6 +615,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   const nut = add(new THREE.BoxGeometry(nutW, 0.0048, nutTop - FB_BOT), bone); nut.position.set(0, nutY + 0.0024, FB_BOT + (nutTop - FB_BOT) / 2);
 
   // ---- neck shaft (outward-wound loft): C-profile from the fretboard end to a flat headstock back
+  into('neck');
   const HEAD_FACE = 0.0045, HEAD_T = 0.014;
   {
     const y0 = fbEnd, y1 = nutY + 0.03, segY = 90, segA = 28;
@@ -629,7 +644,8 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   // ---- headstock: Clifton's 6-in-line outline, roasted flame maple, tuners on the bass edge
-  const head = new THREE.Group(); head.position.set(0, nutY, 0); group.add(head);
+  into('headstock');
+  const head = new THREE.Group(); head.position.set(0, nutY, 0); part.add(head);
   const headPts = HEAD.map(([x, y]) => new THREE.Vector2(mm(x), mm(y)));
   const hs = add(new THREE.ExtrudeGeometry(new THREE.Shape(headPts), { depth: HEAD_T - 0.002, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 24 }), headMat, head);
   hs.position.z = HEAD_FACE - HEAD_T + 0.001;
@@ -652,6 +668,7 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   for (const [tx, ty] of TREES) { const tree = add(new THREE.CylinderGeometry(0.0028, 0.0028, 0.004, 14), hw, head); tree.rotation.x = Math.PI / 2; tree.position.set(mm(tx), mm(ty), HEAD_FACE + 0.002); }
 
   // ---- strings: bridge → saddle → nut → post
+  into('strings');
   group.updateMatrixWorld(true);
   const radii = [0.00058, 0.00046, 0.00036, 0.00026, 0.00017, 0.00013];
   const stringMat = new THREE.MeshStandardMaterial({ color: '#d4d4d6', metalness: 1, roughness: 0.25 });
@@ -668,5 +685,26 @@ export function buildElectric(buildIn, { logoImage = null } = {}) {
   }
 
   const height = nutY + 0.205;
-  return { group, height, build: b };
+
+  // exploded view: each part slides along its own direction (metres at t = 1). Toward the viewer is +z,
+  // the neck assembly slides up out of the pocket, back hardware drops behind the body.
+  const EXPLODE = {
+    body: [0, 0, 0],
+    hardware: [0, -0.03, -0.16],
+    pickguard: [0, 0.01, 0.12],
+    pickups: [0, 0.02, 0.23],
+    controls: [0.05, -0.01, 0.27],
+    bridge: [0, -0.07, 0.18],
+    strings: [0, 0.03, 0.36],
+    neck: [0, 0.15, -0.02],
+    fretboard: [0, 0.15, 0.13],
+    headstock: [0, 0.21, 0.03],
+  };
+  const setExplode = (t) => {
+    for (const [name, g] of Object.entries(parts)) {
+      const o = EXPLODE[name] ?? [0, 0, 0];
+      g.position.set(o[0] * t, o[1] * t, o[2] * t);
+    }
+  };
+  return { group, height, build: b, parts, setExplode, explodeOffsets: EXPLODE };
 }
