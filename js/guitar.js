@@ -1002,8 +1002,13 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
       const cArch = 0.75 * Math.pow(kArch, 1.6);
       const Ra = 1 + cArch, h0 = Math.sqrt(Ra * Ra - cArch * cArch);
 
-      const ca = Math.cos(th), ax = Math.abs(ca);
-      const h = Math.sqrt(Math.max(0, Ra * Ra - (ax + cArch) * (ax + cArch))) / h0;
+      // Round the arch's crest so no sharp keel runs up the spine: e = 0 on the cap (crisp tip) and on the
+      // round neck end (exact seam with the shaft); in between |cos θ| becomes a soft |x|, normalised so the
+      // sides (|cos θ| = 1) still land exactly on the fretboard edge.
+      const ca = Math.cos(th);
+      const eK = 0.6 * Math.sqrt(Math.max(0, 1 - u)) * smoothstep(u, 0.30, 0.60);
+      const ax = eK > 0 ? (Math.sqrt(ca * ca + eK * eK) - eK) / (Math.sqrt(1 + eK * eK) - eK) : Math.abs(ca);
+      const h =Math.sqrt(Math.max(0, Ra * Ra - (ax + cArch) * (ax + cArch))) / h0;
 
       const rBase = lerp(rL, rSm, smoothstep(h, 0.0, 0.30));
       const r = lerp(rBase, rSpine, h);
@@ -1278,7 +1283,9 @@ export function buildGuitar({ profile: profileName = 'dreadnought', logo = 'Clif
     posts[side] = [];
     postYs.forEach((py) => {
       const hw = headHalf(py);
-      const x = side * (hw - (a1h ? 0.0125 : 0.0115));
+      // A1: where the headstock narrows (top row) the tuner moves out so the 45° screw lugs of a pair
+      // (inner edge 11 mm in from the post) keep ≥ 2 mm off the centre line, i.e. a 4 mm gap between them
+      const x = side * (a1h ? Math.max(hw - 0.0125, 0.013) : hw - 0.0115);
       const T = tuners[side];
       const bush = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0052, 0.0022, 24), tm);
       bush.rotation.x = Math.PI / 2; bush.position.set(x, py, 0.0011); T.add(bush);
